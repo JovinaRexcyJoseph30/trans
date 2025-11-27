@@ -3,55 +3,55 @@ import { BusRoute, Announcement } from './types';
 export const BUS_ROUTES: BusRoute[] = [
   {
     id: '1',
-    routeNumber: '101',
-    origin: 'Koyambedu',
+    routeNumber: '1',
+    origin: 'Ernaoor',
     destination: 'JIT Campus',
-    via: ['Vadapalani', 'Ashok Pillar', 'Guindy'],
-    departureTime: '06:45 AM',
+    via: ['Thiruvottiyur', 'Tondiarpet', 'Tollgate', 'Royapuram', 'Central', 'Koyambedu', 'Maduravoyal'],
+    departureTime: '06:10 AM',
     driverName: 'R. Kumar',
     driverContact: '+91 98765 43210',
     status: 'On Time'
   },
   {
     id: '2',
-    routeNumber: '102',
-    origin: 'Tambaram',
+    routeNumber: '2',
+    origin: 'Manali',
     destination: 'JIT Campus',
-    via: ['Chromepet', 'Pallavaram', 'Anakaputhur'],
-    departureTime: '07:00 AM',
+    via: ['Madhavaram', 'Moolakadai', 'Perambur', 'Anna Nagar', 'Thirumangalam', 'Mogappair'],
+    departureTime: '06:15 AM',
     driverName: 'S. Murugan',
     driverContact: '+91 98765 12345',
     status: 'Departed'
   },
   {
     id: '3',
-    routeNumber: '103',
-    origin: 'Avadi',
+    routeNumber: '3',
+    origin: 'Thiruvanmiyur',
     destination: 'JIT Campus',
-    via: ['Ambattur', 'Padi', 'Thirumangalam'],
-    departureTime: '06:30 AM',
+    via: ['Adyar', 'Kotturpuram', 'Saidapet', 'Guindy', 'Porur', 'Poonamallee'],
+    departureTime: '06:20 AM',
     driverName: 'K. Venkatesh',
     driverContact: '+91 98765 67890',
     status: 'Delayed'
   },
   {
     id: '4',
-    routeNumber: '104',
-    origin: 'T. Nagar',
+    routeNumber: '4',
+    origin: 'Velachery',
     destination: 'JIT Campus',
-    via: ['Saidapet', 'Velachery', 'Medavakkam'],
-    departureTime: '06:50 AM',
+    via: ['Vijaynagar', 'Medavakkam', 'Tambaram', 'Perungalathur', 'Padappai', 'Oragadam'],
+    departureTime: '06:25 AM',
     driverName: 'P. Rajan',
     driverContact: '+91 98765 98765',
     status: 'On Time'
   },
   {
     id: '5',
-    routeNumber: '105',
-    origin: 'Porur',
+    routeNumber: '5',
+    origin: 'Kasimedu',
     destination: 'JIT Campus',
-    via: ['Valasaravakkam', 'Virugambakkam'],
-    departureTime: '07:10 AM',
+    via: ['Kalmandapam', 'Royapuram', 'Beach Station', 'Parrys', 'Central', 'Poonamallee'],
+    departureTime: '06:10 AM',
     driverName: 'M. Ali',
     driverContact: '+91 98765 54321',
     status: 'On Time'
@@ -61,13 +61,13 @@ export const BUS_ROUTES: BusRoute[] = [
 export const ANNOUNCEMENTS: Announcement[] = [
   {
     id: '1',
-    title: 'Route 103 will be delayed by 10 mins due to traffic at Ambattur.',
+    title: 'Route 3 (Thiruvanmiyur) will be delayed by 10 mins due to traffic at Guindy.',
     date: 'Today, 6:45 AM',
     priority: 'High'
   },
   {
     id: '2',
-    title: 'New AC Bus introduced for Tambaram route starting next month.',
+    title: 'New AC Bus introduced for Velachery route starting next month.',
     date: 'Yesterday',
     priority: 'Normal'
   }

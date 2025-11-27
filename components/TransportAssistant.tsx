@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Loader2, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Sparkles, Bot } from 'lucide-react';
 import { sendMessageToGemini } from '../services/geminiService';
 import { ChatMessage } from '../types';
 
 const TransportAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'Hi! I can help you find your bus route or driver details. Ask me anything!' }
+    { role: 'model', text: 'Hello! I am the JIT Transport Assistant. How can I help you with bus routes today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +29,6 @@ const TransportAssistant: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Convert internal message format to Gemini history format
       const history = messages.map(m => ({
         role: m.role,
         parts: [{ text: m.text }]
@@ -40,7 +39,7 @@ const TransportAssistant: React.FC = () => {
         setMessages(prev => [...prev, { role: 'model', text: response }]);
       }
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', text: "Sorry, I'm having trouble connecting to the transport server right now.", isError: true }]);
+      setMessages(prev => [...prev, { role: 'model', text: "I apologize, but I am currently unable to access the transport database.", isError: true }]);
     } finally {
       setIsLoading(false);
     }
@@ -55,41 +54,42 @@ const TransportAssistant: React.FC = () => {
       {/* Floating Action Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:scale-105 transition-all z-40 ${isOpen ? 'hidden' : 'flex'}`}
+        className={`fixed bottom-8 right-8 p-4 bg-brand-navy text-white rounded-full shadow-lg shadow-blue-900/20 hover:bg-brand-blue hover:scale-105 transition-all z-40 ${isOpen ? 'hidden' : 'flex'} items-center gap-2`}
       >
         <MessageSquare className="w-6 h-6" />
+        <span className="font-medium pr-1 hidden sm:block">Ask Assistant</span>
       </button>
 
       {/* Chat Interface */}
-      <div className={`fixed bottom-6 right-6 w-[90vw] sm:w-[400px] h-[500px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
+      <div className={`fixed bottom-6 right-6 w-[90vw] sm:w-[380px] h-[550px] bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
         
         {/* Header */}
-        <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50 backdrop-blur rounded-t-2xl">
+        <div className="p-4 border-b border-slate-100 bg-brand-navy rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+              <Bot className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-white text-sm">JIT Transport AI</h3>
-              <p className="text-xs text-green-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                Online
-              </p>
+              <h3 className="font-bold text-white text-sm">Transport Support</h3>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-xs text-blue-100">AI Assistant Online</span>
+              </div>
             </div>
           </div>
-          <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white">
+          <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-white/10 rounded-lg text-blue-200 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed ${
+              <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm shadow-sm ${
                 msg.role === 'user' 
-                  ? 'bg-blue-600 text-white rounded-br-none' 
-                  : 'bg-zinc-800 text-zinc-200 rounded-bl-none border border-zinc-700'
+                  ? 'bg-brand-blue text-white rounded-br-none' 
+                  : 'bg-white text-slate-700 rounded-bl-none border border-slate-200'
               }`}>
                 {msg.text}
               </div>
@@ -97,9 +97,9 @@ const TransportAssistant: React.FC = () => {
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-zinc-800 p-3 rounded-2xl rounded-bl-none border border-zinc-700 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
-                <span className="text-xs text-zinc-400">Analyzing routes...</span>
+              <div className="bg-white p-4 rounded-2xl rounded-bl-none border border-slate-200 shadow-sm flex items-center gap-3">
+                <Loader2 className="w-4 h-4 text-brand-blue animate-spin" />
+                <span className="text-xs text-slate-500 font-medium">Processing query...</span>
               </div>
             </div>
           )}
@@ -107,26 +107,23 @@ const TransportAssistant: React.FC = () => {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-zinc-800 bg-zinc-900 rounded-b-2xl">
+        <div className="p-4 border-t border-slate-100 bg-white rounded-b-2xl">
           <div className="relative">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Ask about bus numbers, drivers..."
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+              placeholder="Ex: Route 101 timings..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-4 pr-12 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
             />
             <button 
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-brand-navy text-white rounded-lg hover:bg-brand-blue disabled:opacity-50 disabled:hover:bg-brand-navy transition-colors"
             >
               <Send className="w-4 h-4" />
             </button>
-          </div>
-          <div className="text-[10px] text-zinc-600 text-center mt-2">
-            AI can make mistakes. Check official schedules.
           </div>
         </div>
       </div>
