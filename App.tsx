@@ -3,10 +3,15 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero'; // Renamed conceptually to FacilityView in usage
 import TransportAssistant from './components/TransportAssistant';
 import Footer from './components/Footer';
-import { Bus, Images, ChevronRight, ClipboardList, CheckCircle2, MapPinned, ExternalLink, Phone, Star, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  Bus, Images, ChevronRight, ClipboardList, CheckCircle2, MapPinned, 
+  ExternalLink, Phone, Star, MapPin, ChevronDown, ChevronUp,
+  IdCard, Clock, Armchair, Trash2, VolumeX, ShieldAlert, AlertTriangle, UserCheck, Info, ShieldCheck,
+  LayoutDashboard
+} from 'lucide-react';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'facility' | 'gallery' | 'rules' | 'tracking'>('facility');
+  const [activeTab, setActiveTab] = useState<'facility' | 'tracking' | 'rules' | 'gallery'>('facility');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [expandedTrackingRouteId, setExpandedTrackingRouteId] = useState<number | null>(null);
 
@@ -34,6 +39,7 @@ const App: React.FC = () => {
   };
 
   // Tracking Data with Pick-Up Points
+  // Final destination set to "JIT Campus"
   const trackingRoutes = [
     { 
       id: 1, 
@@ -41,7 +47,7 @@ const App: React.FC = () => {
       name: 'ERNAOOR', 
       status: 'Can be seen on Track In app till 7:14 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/gzHUADUs',
-      pickUpPoints: ['Ernaoor', 'Thiruvottiyur', 'Tondiarpet', 'Tollgate', 'Royapuram', 'Central', 'Koyambedu', 'Maduravoyal', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Ernaoor', 'Thiruvottiyur', 'Tondiarpet', 'Tollgate', 'Royapuram', 'Central', 'Koyambedu', 'Maduravoyal', 'JIT Campus']
     },
     { 
       id: 2, 
@@ -49,7 +55,7 @@ const App: React.FC = () => {
       name: 'MANALI', 
       status: 'Can be seen on Track In app till 7:15 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/iI8oKKD3',
-      pickUpPoints: ['Manali', 'Madhavaram', 'Moolakadai', 'Perambur', 'Anna Nagar', 'Thirumangalam', 'Mogappair', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Manali', 'Madhavaram', 'Moolakadai', 'Perambur', 'Anna Nagar', 'Thirumangalam', 'Mogappair', 'JIT Campus']
     },
     { 
       id: 3, 
@@ -57,7 +63,7 @@ const App: React.FC = () => {
       name: 'THIRUVANMIYUR', 
       status: 'Can be seen on Track In app till 7:16 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/R3TjQepA',
-      pickUpPoints: ['Thiruvanmiyur', 'Adyar', 'Kotturpuram', 'Saidapet', 'Guindy', 'Porur', 'Poonamallee', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Thiruvanmiyur', 'Adyar', 'Kotturpuram', 'Saidapet', 'Guindy', 'Porur', 'Poonamallee', 'JIT Campus']
     },
     { 
       id: 4, 
@@ -65,7 +71,7 @@ const App: React.FC = () => {
       name: 'VELACHERY', 
       status: 'Can be seen on Track In app till 7:16 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/VP0E5fDr',
-      pickUpPoints: ['Velachery', 'Vijaynagar', 'Medavakkam', 'Tambaram', 'Perungalathur', 'Padappai', 'Oragadam', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Velachery', 'Vijaynagar', 'Medavakkam', 'Tambaram', 'Perungalathur', 'Padappai', 'Oragadam', 'JIT Campus']
     },
     { 
       id: 5, 
@@ -73,7 +79,7 @@ const App: React.FC = () => {
       name: 'KASIMEDU', 
       status: 'Can be seen on Track In app till 7:16 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/RkuKqY6o',
-      pickUpPoints: ['Kasimedu', 'Kalmandapam', 'Royapuram', 'Beach Station', 'Parrys', 'Central', 'Poonamallee', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Kasimedu', 'Kalmandapam', 'Royapuram', 'Beach Station', 'Parrys', 'Central', 'Poonamallee', 'JIT Campus']
     },
     { 
       id: 6, 
@@ -81,7 +87,7 @@ const App: React.FC = () => {
       name: 'CHEYYAR', 
       status: 'Can be seen on Track In app till 7:17 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/1ItpDoOn',
-      pickUpPoints: ['Cheyyar', 'Vembakkam', 'Kanchipuram', 'Walajabad', 'Oragadam', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Cheyyar', 'Vembakkam', 'Kanchipuram', 'Walajabad', 'Oragadam', 'JIT Campus']
     },
     { 
       id: 7, 
@@ -89,7 +95,7 @@ const App: React.FC = () => {
       name: 'ARCOT', 
       status: 'Can be seen on Track In app till 7:17 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/HMTpbrEJ',
-      pickUpPoints: ['Arcot', 'Walajapet', 'Kaveripakkam', 'Balu Chetty Chatram', 'Kanchipuram Bypass', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Arcot', 'Walajapet', 'Kaveripakkam', 'Balu Chetty Chatram', 'Kanchipuram Bypass', 'JIT Campus']
     },
     { 
       id: 8, 
@@ -97,7 +103,7 @@ const App: React.FC = () => {
       name: 'CHENGALPATTU', 
       status: 'Can be seen on Track In app till 7:18 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/iYpoUsyB',
-      pickUpPoints: ['Chengalpattu', 'Paranur', 'Singaperumal Koil', 'Maraimalai Nagar', 'Guduvanchery', 'Vandalur', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Chengalpattu', 'Paranur', 'Singaperumal Koil', 'Maraimalai Nagar', 'Guduvanchery', 'Vandalur', 'JIT Campus']
     },
     { 
       id: 9, 
@@ -105,7 +111,7 @@ const App: React.FC = () => {
       name: 'THIRUTHANI', 
       status: 'Can be seen on Track In app till 7:18 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/BkMdpXMx',
-      pickUpPoints: ['Thiruthani', 'Arakkonam', 'Thakkolam', 'Perambakkam', 'Sunguvarchatram', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Thiruthani', 'Arakkonam', 'Thakkolam', 'Perambakkam', 'Sunguvarchatram', 'JIT Campus']
     },
     { 
       id: 10, 
@@ -113,7 +119,7 @@ const App: React.FC = () => {
       name: 'VANDHAVASI', 
       status: 'Can be seen on Track In app till 7:14 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/N5FjbmAL',
-      pickUpPoints: ['Vandhavasi', 'Thellar', 'Desur', 'Kanchipuram', 'Sunguvarchatram', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Vandhavasi', 'Thellar', 'Desur', 'Kanchipuram', 'Sunguvarchatram', 'JIT Campus']
     },
     { 
       id: 11, 
@@ -121,7 +127,7 @@ const App: React.FC = () => {
       name: 'VENGAI VASAL', 
       status: 'Can be seen on Track In app till 7:14 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/5b26EYP6',
-      pickUpPoints: ['Vengai Vasal', 'Sembakkam', 'Camp Road', 'Tambaram', 'Perungalathur', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Vengai Vasal', 'Sembakkam', 'Camp Road', 'Tambaram', 'Perungalathur', 'JIT Campus']
     },
     { 
       id: 12, 
@@ -129,7 +135,7 @@ const App: React.FC = () => {
       name: 'ASHOKEPILLAR', 
       status: 'Can be seen on Track In app till 7:15 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/4Kid5TNH',
-      pickUpPoints: ['Ashok Pillar', 'KK Nagar', 'Vadapalani', 'Valasaravakkam', 'Porur', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Ashok Pillar', 'KK Nagar', 'Vadapalani', 'Valasaravakkam', 'Porur', 'JIT Campus']
     },
     { 
       id: 13, 
@@ -137,7 +143,7 @@ const App: React.FC = () => {
       name: 'CHENGALPATTU', 
       status: 'Can be seen on Track In app till 7:13 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/NdopYWtG',
-      pickUpPoints: ['Chengalpattu New Bus Stand', 'Mahindra World City', 'Singaperumal Koil', 'Walajabad', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Chengalpattu New Bus Stand', 'Mahindra World City', 'Singaperumal Koil', 'Walajabad', 'JIT Campus']
     },
     { 
       id: 14, 
@@ -145,7 +151,7 @@ const App: React.FC = () => {
       name: 'TN21 AU9096', 
       status: 'Can be seen on Track In app till 7:19 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/9Gv4GCPS',
-      pickUpPoints: ['Kanchipuram HO', 'Collectorate', 'Orikkai', 'Sevilimedu', 'Sunguvarchatram', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Kanchipuram HO', 'Collectorate', 'Orikkai', 'Sevilimedu', 'Sunguvarchatram', 'JIT Campus']
     },
     { 
       id: 15, 
@@ -153,7 +159,7 @@ const App: React.FC = () => {
       name: 'THAKKOLAM', 
       status: 'Can be seen on Track In app till 7:13 AM, Feb 11.', 
       url: 'https://app.gpstrack.in/url/jhx9olDb',
-      pickUpPoints: ['Thakkolam', 'Arakkonam Junction', 'Kaveripakkam', 'Balu Chetty Chatram', 'Jeppiaar Institute of Technology, Sriperumbudur']
+      pickUpPoints: ['Thakkolam', 'Arakkonam Junction', 'Kaveripakkam', 'Balu Chetty Chatram', 'JIT Campus']
     },
   ];
 
@@ -164,92 +170,119 @@ const App: React.FC = () => {
     return true;
   });
 
+  const rules = [
+    { icon: IdCard, text: "Carry your college ID card when using the bus.", title: "Identity", color: "text-blue-600", bg: "bg-blue-50" },
+    { icon: Clock, text: "Arrive 5–10 minutes early at your stop.", title: "Punctuality", color: "text-emerald-600", bg: "bg-emerald-50" },
+    { icon: Armchair, text: "Remain seated while the bus is moving.", title: "Safety", color: "text-indigo-600", bg: "bg-indigo-50" },
+    { icon: Trash2, text: "Do not litter; keep the bus clean.", title: "Cleanliness", color: "text-amber-600", bg: "bg-amber-50" },
+    { icon: VolumeX, text: "Avoid loud behavior or disturbing others.", title: "Discipline", color: "text-rose-600", bg: "bg-rose-50" },
+    { icon: ShieldAlert, text: "Do not damage bus property.", title: "Responsibility", color: "text-orange-600", bg: "bg-orange-50" },
+    { icon: AlertTriangle, text: "Do not lean outside the windows.", title: "Caution", color: "text-red-600", bg: "bg-red-50" },
+    { icon: UserCheck, text: "Follow driver and staff instructions at all times.", title: "Obedience", color: "text-teal-600", bg: "bg-teal-50" }
+  ];
+
+  // Menu Configuration for Sidebar
+  const menuItems = [
+    { 
+      id: 'facility', 
+      label: 'Transport Facility', 
+      icon: Bus, 
+      desc: 'Services & Overview' 
+    },
+    { 
+      id: 'tracking', 
+      label: 'Bus Route Tracking', 
+      icon: MapPinned, 
+      desc: 'Live GPS Status' 
+    },
+    { 
+      id: 'rules', 
+      label: 'Transportation Rules', 
+      icon: ClipboardList, 
+      desc: 'Safety Guidelines' 
+    },
+    { 
+      id: 'gallery', 
+      label: 'Photo Gallery', 
+      icon: Images, 
+      desc: 'Campus Fleet' 
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 flex flex-col font-sans">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
-        <div className="flex flex-col md:flex-row gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex-grow w-full">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
           
-          {/* Left Sidebar */}
-          <div className="w-full md:w-72 flex-shrink-0">
-            {/* Adjusted top offset to 5rem (80px) approx to sit below the new sticky nav (h-12 = 3rem) + gap */}
-            <div className="bg-brand-navy rounded-2xl shadow-xl overflow-hidden sticky top-16 transition-all duration-300">
-              <div className="p-6 border-b border-white/10 bg-gradient-to-r from-brand-navy to-[#0f2a5e]">
-                <h3 className="text-xs font-bold text-brand-blue uppercase tracking-widest mb-1">FACILITIES</h3>
-                <h2 className="text-2xl font-bold text-white">Transportation</h2>
+          {/* Dashboard Sidebar Menu */}
+          <div className="w-full lg:w-80 flex-shrink-0">
+            <div className="sticky top-20">
+              
+              {/* Header Card */}
+              <div className="bg-brand-navy rounded-2xl p-6 mb-6 shadow-xl relative overflow-hidden">
+                <div className="absolute right-0 top-0 w-24 h-24 bg-white/5 rounded-full -mr-8 -mt-8 blur-2xl"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-2 opacity-80">
+                    <LayoutDashboard className="w-4 h-4 text-brand-blue" />
+                    <span className="text-xs font-bold text-white uppercase tracking-widest">Dashboard</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">Student Transport</h2>
+                  <p className="text-blue-100 text-sm mt-1">Manage your daily commute</p>
+                </div>
               </div>
-              <div className="p-3">
-                <nav className="space-y-1">
+
+              {/* Navigation Grid (Vertical) */}
+              <nav className="space-y-3">
+                {menuItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
                   
-                  {/* 1. Transport Facility */}
-                  <button
-                    onClick={() => setActiveTab('facility')}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group ${
-                      activeTab === 'facility' 
-                        ? 'bg-brand-blue text-white shadow-md' 
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Bus className="w-5 h-5" />
-                      <span className="font-medium">Transport Facility</span>
-                    </div>
-                    {activeTab === 'facility' && <ChevronRight className="w-4 h-4" />}
-                  </button>
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id as any)}
+                      className={`w-full text-left relative overflow-hidden rounded-xl p-4 transition-all duration-300 group border-2 ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-brand-navy to-[#0f2a5e] border-brand-navy shadow-lg shadow-blue-900/20 translate-x-1' 
+                          : 'bg-white border-white hover:border-brand-blue/30 hover:shadow-md hover:-translate-y-0.5'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2.5 rounded-lg transition-colors ${
+                            isActive ? 'bg-white/10 text-brand-blue' : 'bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-brand-blue'
+                          }`}>
+                            <Icon className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h3 className={`font-bold text-sm ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                              {item.label}
+                            </h3>
+                            <p className={`text-xs mt-0.5 ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>
+                              {item.desc}
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-5 h-5 transition-transform duration-300 ${
+                          isActive ? 'text-white translate-x-1' : 'text-slate-300 group-hover:text-brand-blue group-hover:translate-x-1'
+                        }`} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </nav>
 
-                  {/* 2. Bus Route Tracking */}
-                  <button
-                    onClick={() => setActiveTab('tracking')}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group ${
-                      activeTab === 'tracking' 
-                        ? 'bg-brand-blue text-white shadow-md' 
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <MapPinned className="w-5 h-5" />
-                      <span className="font-medium">Bus Route Tracking</span>
-                    </div>
-                    {activeTab === 'tracking' && <ChevronRight className="w-4 h-4" />}
-                  </button>
-
-                  {/* 3. Photo Gallery */}
-                  <button
-                    onClick={() => setActiveTab('gallery')}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group ${
-                      activeTab === 'gallery' 
-                        ? 'bg-brand-blue text-white shadow-md' 
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Images className="w-5 h-5" />
-                      <span className="font-medium">Photo Gallery</span>
-                    </div>
-                    {activeTab === 'gallery' && <ChevronRight className="w-4 h-4" />}
-                  </button>
-
-                  {/* 4. Transportation Rules */}
-                  <button
-                    onClick={() => setActiveTab('rules')}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group ${
-                      activeTab === 'rules' 
-                        ? 'bg-brand-blue text-white shadow-md' 
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <ClipboardList className="w-5 h-5" />
-                      <span className="font-medium">Transportation Rules</span>
-                    </div>
-                    {activeTab === 'rules' && <ChevronRight className="w-4 h-4" />}
-                  </button>
-                </nav>
-              </div>
-              <div className="p-6 mt-4 bg-black/20 text-center">
-                <p className="text-xs text-slate-400 mb-2">Transport In-charge</p>
-                <div className="font-mono text-lg text-white font-bold">+91 74012 22005</div>
+              {/* Contact Card */}
+              <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm text-center">
+                <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 text-brand-blue">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Transport In-charge</p>
+                <a href="tel:+917401222005" className="block text-lg font-bold text-brand-navy hover:text-brand-blue transition-colors font-mono">
+                  +91 74012 22005
+                </a>
               </div>
             </div>
           </div>
@@ -259,57 +292,28 @@ const App: React.FC = () => {
             
             {/* Tab: Transport Facility (Brochure View) */}
             {activeTab === 'facility' && (
-              <Hero />
-            )}
-
-            {/* Tab: Transportation Rules */}
-            {activeTab === 'rules' && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[600px] animate-in fade-in zoom-in-95 duration-300">
-                <div className="px-8 pt-8 pb-4 border-b border-slate-100">
-                  <h2 className="text-xs font-bold text-brand-blue tracking-widest uppercase mb-2">Guidelines</h2>
-                  <h1 className="text-3xl font-bold text-brand-navy font-sans">Transportation Rules</h1>
-                </div>
-                
-                <div className="p-8">
-                  <div className="bg-slate-50 rounded-xl p-8 border border-slate-100">
-                    <ul className="space-y-4">
-                      {[
-                        'Carry your college ID card when using the bus.',
-                        'Arrive 5–10 minutes early at your stop.',
-                        'Remain seated while the bus is moving.',
-                        'Do not litter; keep the bus clean.',
-                        'Avoid loud behavior or disturbing others.',
-                        'Do not damage bus property.',
-                        'Do not lean outside the windows.',
-                        'Follow driver and staff instructions at all times.'
-                      ].map((rule, idx) => (
-                        <li key={idx} className="flex items-start gap-4">
-                          <div className="flex-shrink-0 mt-0.5">
-                            <CheckCircle2 className="w-5 h-5 text-brand-blue" />
-                          </div>
-                          <span className="text-slate-700 text-sm leading-relaxed font-medium">{rule}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                <Hero />
               </div>
             )}
 
             {/* Tab: Bus Route Tracking */}
             {activeTab === 'tracking' && (
-               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[600px] animate-in fade-in zoom-in-95 duration-300">
-                 <div className="px-8 pt-8 pb-4 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[600px] animate-in fade-in slide-in-from-right-4 duration-500">
+                 <div className="px-6 py-8 sm:px-8 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-50 to-white">
                    <div>
-                     <h2 className="text-xs font-bold text-brand-blue tracking-widest uppercase mb-2">Live Tracking</h2>
+                     <div className="flex items-center gap-2 mb-2">
+                        <MapPinned className="w-5 h-5 text-brand-blue" />
+                        <h2 className="text-xs font-bold text-brand-blue tracking-widest uppercase">Live Status</h2>
+                     </div>
                      <h1 className="text-3xl font-bold text-brand-navy font-sans">Bus Route Tracking</h1>
                    </div>
                    <button
                     onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
                       showFavoritesOnly 
-                        ? 'bg-amber-50 text-amber-600 border border-amber-200' 
-                        : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
+                        ? 'bg-amber-100 text-amber-700 border border-amber-200' 
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-brand-navy'
                     }`}
                    >
                      <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
@@ -324,9 +328,13 @@ const App: React.FC = () => {
                          const isFavorite = favorites.includes(route.id.toString());
                          const isExpanded = expandedTrackingRouteId === route.id;
                          return (
-                           <div key={route.id} className="bg-slate-50 rounded-xl border border-slate-200 hover:border-brand-blue/30 hover:shadow-md transition-all overflow-hidden">
+                           <div key={route.id} className={`rounded-xl border transition-all duration-300 overflow-hidden ${
+                             isExpanded 
+                               ? 'bg-white border-brand-blue/30 shadow-lg shadow-blue-900/5 ring-1 ring-brand-blue/10' 
+                               : 'bg-white border-slate-200 hover:border-brand-blue/30 hover:shadow-md'
+                           }`}>
                              
-                             <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                             <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
                                <div className="flex items-start md:items-center gap-4">
                                  <button 
                                    onClick={() => toggleFavorite(route.id.toString())}
@@ -336,39 +344,40 @@ const App: React.FC = () => {
                                    <Star className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                                  </button>
 
-                                 <div className="w-12 h-12 rounded-lg bg-brand-navy text-white flex flex-col items-center justify-center flex-shrink-0 font-bold border-2 border-brand-blue/30 shadow-sm">
-                                   <span className="text-[10px] opacity-70 leading-none">RT</span>
-                                   <span className="text-lg leading-none">{route.number}</span>
+                                 <div className="w-14 h-14 rounded-2xl bg-brand-navy text-white flex flex-col items-center justify-center flex-shrink-0 font-bold border-4 border-double border-white shadow-lg shadow-brand-navy/20 relative overflow-hidden group">
+                                   <div className="absolute inset-0 bg-brand-blue opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                                   <span className="text-[10px] opacity-70 leading-none mb-0.5">RT</span>
+                                   <span className="text-xl leading-none">{route.number}</span>
                                  </div>
                                  
                                  <div>
                                    <h3 className="text-lg font-bold text-slate-800">{route.name}</h3>
-                                   <div className="flex items-center gap-2 mt-1">
-                                      <span className="relative flex h-2 w-2">
+                                   <div className="flex items-center gap-2 mt-1.5">
+                                      <span className="relative flex h-2.5 w-2.5">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                                       </span>
-                                      <p className="text-xs text-slate-500 font-medium">{route.status}</p>
+                                      <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">{route.status}</p>
                                    </div>
                                  </div>
                                </div>
 
-                               <div className="flex items-center justify-end gap-2 w-full md:w-auto">
+                               <div className="flex items-center justify-end gap-3 w-full md:w-auto pl-12 md:pl-0">
                                  <button
                                    onClick={() => toggleRouteExpansion(route.id)}
-                                   className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-slate-200 ${
+                                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-colors border ${
                                      isExpanded 
-                                       ? 'bg-slate-200 text-slate-800' 
-                                       : 'bg-white text-slate-600 hover:bg-slate-100'
+                                       ? 'bg-slate-100 text-slate-900 border-slate-200' 
+                                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-brand-navy'
                                    }`}
                                  >
-                                    <span className="hidden sm:inline">View Route Info</span>
+                                    <span className="hidden sm:inline">View Stops</span>
                                     {isExpanded ? <ChevronUp className="w-4 h-4"/> : <ChevronDown className="w-4 h-4"/>}
                                  </button>
 
                                  <a 
                                     href="tel:+919884119946"
-                                    className="p-3 bg-white border border-slate-200 text-slate-600 rounded-lg hover:text-brand-blue hover:border-brand-blue hover:bg-blue-50 transition-colors shadow-sm flex-shrink-0"
+                                    className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:text-brand-blue hover:border-brand-blue hover:bg-blue-50 transition-colors shadow-sm flex-shrink-0"
                                     title="Call Transport Coordinator"
                                   >
                                     <Phone className="w-5 h-5" />
@@ -377,19 +386,21 @@ const App: React.FC = () => {
                                    href={route.url} 
                                    target="_blank" 
                                    rel="noopener noreferrer"
-                                   className="flex items-center gap-2 px-5 py-2.5 bg-brand-blue text-white rounded-lg hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20 font-medium text-sm w-full md:w-auto justify-center group flex-grow md:flex-grow-0"
+                                   className="flex items-center gap-2 px-6 py-2.5 bg-brand-blue text-white rounded-lg hover:bg-blue-600 hover:-translate-y-0.5 transition-all shadow-lg shadow-blue-500/20 font-bold text-sm w-full md:w-auto justify-center group flex-grow md:flex-grow-0"
                                  >
-                                   <span>Track Live</span>
+                                   <span>Track</span>
                                    <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                                  </a>
                                </div>
                              </div>
 
                              {isExpanded && (
-                               <div className="border-t border-slate-200 bg-white p-6 sm:p-8 animate-in slide-in-from-top-2 duration-200">
+                               <div className="border-t border-slate-100 bg-slate-50/50 p-6 sm:p-8 animate-in slide-in-from-top-2 duration-300">
                                   <div className="flex items-center gap-2 mb-8">
-                                    <MapPin className="w-4 h-4 text-brand-blue" />
-                                    <h4 className="text-xs font-bold text-brand-blue uppercase tracking-widest">Route Path Timeline</h4>
+                                    <div className="p-1.5 bg-white rounded-md shadow-sm border border-slate-200">
+                                      <MapPin className="w-4 h-4 text-brand-blue" />
+                                    </div>
+                                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Route Timeline</h4>
                                   </div>
                                   
                                   <div className="relative ml-2 sm:ml-4">
@@ -401,7 +412,7 @@ const App: React.FC = () => {
                                         <div key={idx} className="relative flex gap-6 pb-10 last:pb-0 group/stop">
                                           {/* Vertical Path Connector */}
                                           {!isLast && (
-                                            <div className="absolute left-[11px] top-8 bottom-0 w-[3px] bg-slate-100 group-hover/stop:bg-brand-blue/20 transition-colors" aria-hidden="true" />
+                                            <div className="absolute left-[11px] top-8 bottom-0 w-[3px] bg-slate-200 group-hover/stop:bg-brand-blue/30 transition-colors rounded-full" aria-hidden="true" />
                                           )}
 
                                           {/* Node Indicator */}
@@ -409,8 +420,8 @@ const App: React.FC = () => {
                                             isLast 
                                               ? 'border-brand-navy shadow-lg shadow-blue-900/10 scale-125' 
                                               : isFirst 
-                                                ? 'border-emerald-500 shadow-md shadow-emerald-500/20' 
-                                                : 'border-slate-300 group-hover/stop:border-brand-blue'
+                                                ? 'border-emerald-500 shadow-md shadow-emerald-500/20 scale-110' 
+                                                : 'border-slate-300 group-hover/stop:border-brand-blue group-hover/stop:scale-110'
                                           }`}>
                                             <div className={`w-2 h-2 rounded-full transition-colors ${
                                               isLast ? 'bg-brand-navy' : isFirst ? 'bg-emerald-500' : 'bg-slate-300 group-hover/stop:bg-brand-blue'
@@ -418,27 +429,29 @@ const App: React.FC = () => {
                                           </div>
 
                                           {/* Text Content */}
-                                          <div className={`flex-grow -mt-2 ${isLast ? 'bg-brand-navy/5 p-4 rounded-xl border border-brand-navy/10' : ''}`}>
-                                             <h5 className={`text-sm leading-tight ${
-                                               isLast 
-                                                 ? 'font-bold text-brand-navy text-base' 
-                                                 : 'font-semibold text-slate-700'
-                                             }`}>
-                                               {point}
-                                             </h5>
-                                             
-                                             {isFirst && (
-                                               <span className="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wide">
-                                                 Start Point
-                                               </span>
-                                             )}
-                                             
-                                             {isLast && (
-                                               <div className="flex items-center gap-1.5 mt-2 text-xs text-brand-navy font-bold uppercase tracking-wide">
-                                                 <MapPinned className="w-3.5 h-3.5" />
-                                                 <span>Final Destination</span>
-                                               </div>
-                                             )}
+                                          <div className={`flex-grow -mt-2 transition-transform duration-300 ${isLast ? 'translate-x-1' : ''}`}>
+                                             <div className={`inline-block ${isLast ? 'bg-brand-navy text-white px-4 py-3 rounded-xl shadow-lg shadow-brand-navy/20' : ''}`}>
+                                                <h5 className={`text-sm leading-tight ${
+                                                  isLast 
+                                                    ? 'font-bold' 
+                                                    : 'font-semibold text-slate-700'
+                                                }`}>
+                                                  {point}
+                                                </h5>
+                                                
+                                                {isFirst && (
+                                                  <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wide">
+                                                    Start Point
+                                                  </span>
+                                                )}
+                                                
+                                                {isLast && (
+                                                  <div className="flex items-center gap-1.5 mt-1 text-[10px] text-blue-100 font-bold uppercase tracking-wide opacity-80">
+                                                    <MapPinned className="w-3 h-3" />
+                                                    <span>Destination</span>
+                                                  </div>
+                                                )}
+                                             </div>
                                           </div>
                                         </div>
                                       );
@@ -451,25 +464,25 @@ const App: React.FC = () => {
                          );
                        })
                      ) : (
-                       <div className="text-center py-12 bg-slate-50 border border-slate-200 border-dashed rounded-xl">
-                         <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                           <Star className="w-6 h-6 text-slate-300" />
+                       <div className="text-center py-16 bg-white border border-slate-200 border-dashed rounded-2xl">
+                         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                           <Star className="w-8 h-8 text-slate-300" />
                          </div>
-                         <h3 className="text-sm font-bold text-slate-700">No favorite routes found</h3>
-                         <p className="text-xs text-slate-500 mt-1">Mark routes with the star icon to see them here.</p>
+                         <h3 className="text-lg font-bold text-slate-800">No favorite routes found</h3>
+                         <p className="text-sm text-slate-500 mt-2">Mark routes with the star icon for quick access.</p>
                        </div>
                      )}
                    </div>
 
-                   <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-lg flex gap-3">
-                      <div className="mt-1">
+                   <div className="mt-8 p-5 bg-blue-50 border border-blue-100 rounded-xl flex gap-4 shadow-sm">
+                      <div className="mt-0.5 p-2 bg-white rounded-lg shadow-sm border border-blue-100 h-fit">
                         <MapPinned className="w-5 h-5 text-brand-blue" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-brand-navy">Note regarding GPS Tracking</h4>
-                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                          The links provided above redirect to the external <strong>Track In</strong> application platform. 
-                          Live status depends on the device connectivity on the bus. If a bus is not visible, it may be out of network coverage area.
+                        <h4 className="text-sm font-bold text-brand-navy mb-1">GPS Tracking Notice</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          The links provided above redirect to the external <strong>Track In</strong> platform. 
+                          Live status depends on the device connectivity. If a bus is not visible, it may be out of network coverage.
                         </p>
                       </div>
                    </div>
@@ -477,14 +490,74 @@ const App: React.FC = () => {
                </div>
             )}
 
+            {/* Tab: Transportation Rules */}
+            {activeTab === 'rules' && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[600px] animate-in fade-in slide-in-from-right-4 duration-500">
+                {/* Header Banner */}
+                <div className="relative bg-gradient-to-r from-brand-navy to-brand-blue overflow-hidden">
+                   <div className="absolute right-0 top-0 h-full w-1/3 bg-white/5 skew-x-12 transform origin-bottom-right"></div>
+                   <div className="px-8 py-10 relative z-10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                        <h2 className="text-xs font-bold text-blue-200 tracking-widest uppercase">College Bus Guidelines</h2>
+                      </div>
+                      <h1 className="text-3xl font-bold text-white font-sans">Safety & Courtesy</h1>
+                      <p className="text-blue-100 text-sm mt-2 max-w-xl">
+                        Ensuring a safe and pleasant commute for everyone starts with you. Please follow these guidelines on every journey.
+                      </p>
+                   </div>
+                </div>
+
+                <div className="p-6 sm:p-8 bg-slate-50/50">
+                  {/* Quick Summary / Top Priorities */}
+                  <div className="mb-8 bg-white border-l-4 border-brand-blue rounded-r-xl shadow-sm p-4 flex items-start gap-4">
+                    <div className="p-2 bg-blue-50 rounded-full flex-shrink-0">
+                      <Info className="w-5 h-5 text-brand-blue" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-brand-navy mb-1">Top Priorities</h4>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Always carry your <strong>ID Card</strong>, arrive <strong>5 mins early</strong>, and remain <strong>seated</strong> for your safety.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Rules Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+                    {rules.map((rule, idx) => {
+                      const Icon = rule.icon;
+                      return (
+                        <div 
+                          key={idx} 
+                          className="group bg-white rounded-xl p-5 border border-slate-200 hover:border-brand-blue/30 hover:shadow-lg hover:shadow-blue-900/5 transition-all duration-300 cursor-default flex items-start gap-4"
+                        >
+                          <div className={`w-12 h-12 rounded-xl ${rule.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                            <Icon className={`w-6 h-6 ${rule.color}`} />
+                          </div>
+                          <div>
+                            <h3 className={`text-xs font-bold uppercase tracking-wider mb-1 ${rule.color} opacity-80`}>
+                              {rule.title}
+                            </h3>
+                            <p className="text-sm font-medium text-slate-700 leading-relaxed group-hover:text-brand-navy transition-colors">
+                              {rule.text}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Tab: Gallery (Placeholder) */}
             {activeTab === 'gallery' && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center min-h-[400px] flex flex-col items-center justify-center">
-                 <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mb-6">
-                    <Images className="w-10 h-10 text-brand-blue/40" />
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center min-h-[400px] flex flex-col items-center justify-center animate-in fade-in slide-in-from-right-4 duration-500">
+                 <div className="w-24 h-24 bg-blue-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm">
+                    <Images className="w-12 h-12 text-brand-blue" />
                  </div>
-                 <h2 className="text-xl font-bold text-brand-navy mb-2">Transport Gallery</h2>
-                 <p className="text-slate-500 max-w-md mx-auto">
+                 <h2 className="text-2xl font-bold text-brand-navy mb-3">Transport Gallery</h2>
+                 <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
                    Images of our fleet, safety measures, and facility infrastructure will be updated here shortly.
                  </p>
               </div>
