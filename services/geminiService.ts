@@ -5,7 +5,8 @@ let aiClient: GoogleGenAI | null = null;
 
 const getAiClient = () => {
   if (!aiClient) {
-    const apiKey = process.env.API_KEY;
+    // Try to get key from Vite env or standard process env
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
     if (apiKey) {
       aiClient = new GoogleGenAI({ apiKey });
     }
@@ -16,12 +17,15 @@ const getAiClient = () => {
 export const sendMessageToGemini = async (message: string, history: { role: string, parts: { text: string }[] }[] = []) => {
   const client = getAiClient();
   if (!client) {
-    throw new Error("API Key not found");
+    // Return null or throw error depending on desired UX. 
+    // Throwing error allows the UI to handle the "not configured" state.
+    console.warn("Gemini API Key not found. Please set VITE_GEMINI_API_KEY in .env");
+    return null;
   }
 
   try {
     const chat = client.chats.create({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
       },

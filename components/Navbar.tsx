@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Menu, X, Phone, Mail } from 'lucide-react';
+import { Page } from '../App';
 
-const Navbar: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+interface NavbarProps {
+  currentPage: Page;
+  onNavigate: (page: Page) => void;
+}
 
-  // Partner list with updated image URLs and added TCS iON
+const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const navItems: Page[] = ['Home', 'Route', 'About', 'Contact'];
+
   const partners = [
     { name: "StartupTN", src: "https://www.jeppiaarinstitute.org/wp-content/uploads/2025/02/STARTUP-tN-LOGO.png" },
     { name: "PALS", src: "https://www.jeppiaarinstitute.org/wp-content/uploads/2025/02/PALS-Logo_New.jpg" },
     { name: "Idea Lab", src: "https://www.jeppiaarinstitute.org/wp-content/uploads/2025/02/AICTE-IDEA-LAB-LOGO.jpg" },
+    { name: "MoE's IC", src: "https://mic.gov.in/assets/img/MIC-Big.png" },
     { name: "AICTE", src: "https://www.jeppiaarinstitute.org/wp-content/themes/jeppiaarinstitute/images/AIC.jpg" },
     { name: "CII", src: "https://www.jeppiaarinstitute.org/wp-content/themes/jeppiaarinstitute/images/CII.jpg" },
     { name: "InPact", src: "https://www.jeppiaarinstitute.org/wp-content/themes/jeppiaarinstitute/images/AIP.jpg" },
@@ -25,9 +33,9 @@ const Navbar: React.FC = () => {
     <div className="flex flex-col w-full bg-white relative z-50 font-sans shadow-sm">
 
       {/* New Top Bar - Replicating the screenshot design */}
-      <div className="bg-brand-navy w-full border-b border-blue-900 text-white text-xs z-50 relative">
+      <div className="bg-brand-navy w-full text-white text-xs z-50 relative">
         <div className="max-w-[1500px] mx-auto px-2">
-          <div className="flex flex-col xl:flex-row items-center justify-between py-1.5 gap-2">
+          <div className="flex flex-col xl:flex-row items-center justify-center py-1.5 gap-2">
 
             {/* Left: Contact Info - Parallel Alignment on ALL screens */}
             <div className="flex flex-row items-center gap-4 sm:gap-6 md:gap-8 justify-center flex-shrink-0 w-full xl:w-auto">
@@ -49,52 +57,44 @@ const Navbar: React.FC = () => {
               </a>
             </div>
 
-            {/* Right: Partners List - Single Row, Equal Size, Evenly Spaced, No Scroll */}
-            <div className="w-full xl:flex-1 xl:ml-6">
-              <div className="flex w-full items-center justify-between gap-1">
-                {partners.map((p, i) => (
-                  <div key={i} className="flex-1 min-w-0 h-7 sm:h-9 md:h-10 bg-white rounded-sm flex items-center justify-center shadow-sm cursor-default hover:scale-105 transition-transform overflow-hidden p-[1px] sm:p-0.5">
-                    <img
-                      src={p.src}
-                      alt={p.name}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+          </div>
+        </div>
+      </div>
 
+      {/* Partner Logo Bar - Extreme Compaction, Dark Blue Background */}
+      <div className="w-full bg-[#192F59] border-b border-blue-900 py-1 relative">
+        <div className="max-w-[1500px] mx-auto px-4">
+          <div className="flex items-center justify-between gap-0.5 md:gap-2 md:flex-wrap md:justify-center pb-1">
+            {partners.map((partner, index) => (
+              <div
+                key={index}
+                className="flex-1 min-w-0 aspect-square md:w-10 md:h-10 md:flex-none bg-white rounded-sm shadow-sm flex items-center justify-center p-0.5 md:p-1.5 transition-all duration-300 hover:shadow-md hover:scale-105"
+              >
+                <img
+                  src={partner.src}
+                  alt={partner.name}
+                  className="max-w-full max-h-full object-contain"
+                  title={partner.name}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Existing Header Section */}
       <div className="flex flex-col items-center w-full bg-white">
-        {/* First Header Image - Top Row */}
-        <div className="w-full border-b border-gray-100">
-          <img
-            src="https://www.jeppiaarinstitute.org/wp-content/uploads/2025/02/aw.jpeg"
-            alt="Jeppiaar Institute Header"
-            className="w-full h-auto object-contain max-h-[80px] sm:max-h-[100px]"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://www.jeppiaarinstitute.org/wp-content/uploads/2025/02/aw.jpeg';
-            }}
-          />
-        </div>
 
-        {/* Second Header Image - Below First */}
-        <div className="py-4 flex items-center justify-center gap-4 sm:gap-8">
+        {/* Main Logo & Accreditations */}
+        <div className="py-4 flex flex-col md:flex-row items-center justify-center gap-6 px-4">
+          {/* College Logo */}
           <img
-            src="https://www.jeppiaarinstitute.org/wp-content/themes/jeppiaarinstitute/images/jplogo.gif"
+            src="/jitlogo.gif"
             alt="Jeppiaar Institute Logo"
             className="h-16 sm:h-20 md:h-24 w-auto object-contain"
           />
-          <img
-            src="https://www.jeppiaarinstitute.org/wp-content/uploads/2025/05/nba.jpg"
-            alt="NBA Accredited"
-            className="h-16 sm:h-20 md:h-24 w-auto object-contain"
-          />
         </div>
+
       </div>
 
       {/* Navigation Strip (Sticky) */}
@@ -104,17 +104,17 @@ const Navbar: React.FC = () => {
 
             {/* Desktop Nav - Centered */}
             <div className="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar w-full justify-center">
-              {['Home', 'Route', 'About', 'Contact'].map((item) => (
-                <a
+              {navItems.map((item) => (
+                <button
                   key={item}
-                  href="#"
-                  className={`px-4 lg:px-6 py-3.5 text-xs lg:text-sm font-bold transition-colors whitespace-nowrap uppercase tracking-wider border-b-4 border-transparent ${item === 'Route'
-                      ? 'bg-white/10 text-white border-brand-blue'
-                      : 'hover:bg-white/5 text-slate-300 hover:text-white hover:border-slate-500'
+                  onClick={() => onNavigate(item)}
+                  className={`px-4 lg:px-6 py-3.5 text-xs lg:text-sm font-bold transition-colors whitespace-nowrap uppercase tracking-wider border-b-4 border-transparent ${currentPage === item
+                    ? 'bg-white/10 text-white border-brand-blue'
+                    : 'hover:bg-white/5 text-slate-300 hover:text-white hover:border-slate-500'
                     }`}
                 >
                   {item}
-                </a>
+                </button>
               ))}
             </div>
 
@@ -130,17 +130,20 @@ const Navbar: React.FC = () => {
           {/* Mobile Menu Dropdown */}
           {isMenuOpen && (
             <div className="md:hidden border-t border-white/10 bg-brand-navy pb-4 animate-in slide-in-from-top-2">
-              {['Home', 'Route', 'About', 'Contact'].map((item) => (
-                <a
+              {navItems.map((item) => (
+                <button
                   key={item}
-                  href="#"
-                  className={`block px-4 py-3 text-sm font-bold border-l-4 transition-colors uppercase tracking-wide ${item === 'Route'
-                      ? 'border-brand-blue bg-white/5 text-white'
-                      : 'border-transparent text-slate-300 hover:text-white hover:bg-white/5'
+                  onClick={() => {
+                    onNavigate(item);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`block w-full text-left px-4 py-3 text-sm font-bold border-l-4 transition-colors uppercase tracking-wide ${currentPage === item
+                    ? 'border-brand-blue bg-white/5 text-white'
+                    : 'border-transparent text-slate-300 hover:text-white hover:bg-white/5'
                     }`}
                 >
                   {item}
-                </a>
+                </button>
               ))}
             </div>
           )}
