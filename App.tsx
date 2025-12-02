@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './components/Home';
-import Transport from './components/Transport';
+import Home from './Pages/Home';
+import Transport from './Pages/Transport';
 import Hero from './components/Hero';
-import Contact from './components/Contact';
-import About from './components/About';
+import Contact from './Pages/Contact';
+import About from './Pages/About';
 import WelcomeSlideshowModal from './components/WelcomeSlideshowModal';
 
 export type Page = 'Home' | 'Route' | 'About' | 'Contact';

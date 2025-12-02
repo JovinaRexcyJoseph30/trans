@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Hero from './Hero';
+import Hero from '../components/Hero';
 import {
     Bus, Images, ChevronRight, ClipboardList, CheckCircle2, MapPinned,
     ExternalLink, Phone, Star, MapPin, ChevronDown, ChevronUp,
