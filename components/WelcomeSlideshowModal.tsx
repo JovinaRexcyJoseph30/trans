@@ -52,7 +52,7 @@ const WelcomeSlideshowModal: React.FC = () => {
 
                 {/* Slideshow Container - Instagram Style (Square or 4:5) */}
                 {/* Using aspect-[4/5] for better vertical mobile coverage, or aspect-square */}
-                <div className="relative w-full aspect-[4/5] bg-[#192F59] flex items-center justify-center overflow-hidden">
+                <div className="relative w-full aspect-[4/5] bg-[#adadad] flex items-center justify-center overflow-hidden">
 
                     {/* Image */}
                     <img
@@ -90,17 +90,6 @@ const WelcomeSlideshowModal: React.FC = () => {
                         ))}
                     </div>
                 </div>
-
-                {/* Footer / Action */}
-                <div className="p-4 bg-white border-t border-slate-100 flex justify-center">
-                    <button
-                        onClick={() => setIsOpen(false)}
-                        className="w-full py-2.5 bg-brand-navy text-white font-bold rounded-xl hover:bg-blue-900 transition-colors shadow-lg shadow-blue-900/20"
-                    >
-                        Get Started
-                    </button>
-                </div>
-
             </div>
         </div>
     );
