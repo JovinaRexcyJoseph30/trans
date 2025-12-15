@@ -766,13 +766,21 @@ const Transport: React.FC = () => {
                 {/* Tab: Gallery (Placeholder) */}
                 {activeTab === 'gallery' && (
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center min-h-[400px] flex flex-col items-center justify-center animate-in fade-in slide-in-from-right-4 duration-500">
-                        <div className="w-24 h-24 bg-blue-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm">
-                            <Images className="w-12 h-12 text-brand-blue" />
+                        <div className="w-full max-w-4xl mx-auto">
+                            <div className="group relative aspect-video bg-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+                                <img
+                                    src={`${typeof __app_id !== 'undefined' ? `/artifacts/${__app_id}/public` : ''}/data/gallery/bus1.png`}
+                                    alt="JIT College Bus Fleet"
+                                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                                    <div>
+                                        <p className="text-white font-bold text-xl text-left">Our JIT Bus Fleet</p>
+                                        <p className="text-white/80 text-sm text-left mt-1">Ensuring safe and comfortable transportation for all students</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h2 className="text-2xl font-bold text-brand-navy mb-3">Transport Gallery</h2>
-                        <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
-                            Images of our fleet, safety measures, and facility infrastructure will be updated here shortly.
-                        </p>
                     </div>
                 )}
 

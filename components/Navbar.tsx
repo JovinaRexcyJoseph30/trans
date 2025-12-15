@@ -62,7 +62,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
       </div>
 
       {/* Partner Logo Bar - Extreme Compaction, Dark Blue Background */}
-      <div className="w-full bg-[#192F59] border-b border-blue-900 py-1 relative">
+      <div className="w-full bg-[#192f59] border-b border-blue-900 py-1 relative">
         <div className="max-w-[1500px] mx-auto px-4">
           <div className="flex items-center justify-between gap-0.5 md:gap-2 md:flex-wrap md:justify-center pb-1">
             {partners.map((partner, index) => (
