@@ -64,9 +64,9 @@ const Transport: React.FC = () => {
             busNumber: 'TN-11-JIT-1001',
             status: 'ON TIME',
             availability: 'available',
-            driverName: 'Mr. Venkatesh',
-            driverPhone: '+919876543210',
-            url: 'https://app.gpstrack.in/url/gzHUADUs',
+            driverName: 'Mr. Viji',
+            driverPhone: '+919003177451',
+            url: 'https://app.gpstrack.in/url/gy5ZETVv',
             pickUpPoints: ['Ernaoor', 'Thiruvottiyur', 'Tondiarpet', 'Tollgate', 'Royapuram', 'Central', 'Koyambedu', 'Maduravoyal', 'JIT Campus']
         },
         {
@@ -76,9 +76,9 @@ const Transport: React.FC = () => {
             busNumber: 'TN-12-JIT-1002',
             status: 'ON TIME',
             availability: 'available',
-            driverName: 'Mr. Saravanan',
-            driverPhone: '+919876543211',
-            url: 'https://app.gpstrack.in/url/iI8oKKD3',
+            driverName: 'Mr. Santhiyagu',
+            driverPhone: '+919840135188',
+            url: 'https://app.gpstrack.in/url/kv9El653',
             pickUpPoints: ['Manali', 'Madhavaram', 'Moolakadai', 'Perambur', 'Anna Nagar', 'Thirumangalam', 'Mogappair', 'JIT Campus']
         },
         {
@@ -88,9 +88,9 @@ const Transport: React.FC = () => {
             busNumber: 'TN-13-JIT-1003',
             status: 'CANCELLED',
             availability: 'not-available',
-            driverName: 'Mr. Murugan',
-            driverPhone: '+919876543212',
-            url: 'https://app.gpstrack.in/url/R3TjQepA',
+            driverName: 'Mr. Akbar',
+            driverPhone: '+919940696784',
+            url: 'https://app.gpstrack.in/url/bFJj0S73',
             pickUpPoints: ['Thiruvanmiyur', 'Adyar', 'Kotturpuram', 'Saidapet', 'Guindy', 'Porur', 'Poonamallee', 'JIT Campus']
         },
         {
@@ -99,10 +99,10 @@ const Transport: React.FC = () => {
             name: 'VELACHERY',
             busNumber: 'TN-14-JIT-1004',
             status: 'REROUTED',
-            availability: 'rerouted',
-            driverName: 'Mr. Kumar',
-            driverPhone: '+919876543213',
-            url: 'https://app.gpstrack.in/url/VP0E5fDr',
+            availability: 'available',
+            driverName: 'Mr. Manikandan',
+            driverPhone: '+919444897362',
+            url: 'https://app.gpstrack.in/url/6PdZmT04',
             pickUpPoints: ['Velachery', 'Vijaynagar', 'Medavakkam', 'Tambaram', 'Perungalathur', 'Padappai', 'Oragadam', 'JIT Campus']
         },
         {
@@ -112,73 +112,85 @@ const Transport: React.FC = () => {
             busNumber: 'TN-15-JIT-1005',
             status: 'ON TIME',
             availability: 'available',
-            driverName: 'Mr. Rajesh',
-            driverPhone: '+919876543214',
-            url: 'https://app.gpstrack.in/url/RkuKqY6o',
+            driverName: 'Mr. Kumaran',
+            driverPhone: '+918122048344',
+            url: 'https://app.gpstrack.in/url/ru45Wtnz',
             pickUpPoints: ['Kasimedu', 'Kalmandapam', 'Royapuram', 'Beach Station', 'Parrys', 'Central', 'Poonamallee', 'JIT Campus']
         },
         {
             id: 6,
-            number: '07',
-            name: 'CHEYYAR',
+            number: '06',
+            name: 'REDHILLS',
             busNumber: 'TN-16-JIT-1006',
             status: 'ON TIME',
             availability: 'available',
-            driverName: 'Mr. Suresh',
-            driverPhone: '+919876543215',
-            url: 'https://app.gpstrack.in/url/1ItpDoOn',
-            pickUpPoints: ['Cheyyar', 'Vembakkam', 'Kanchipuram', 'Walajabad', 'Oragadam', 'JIT Campus']
+            driverName: 'Mr. Dharani',
+            driverPhone: '+919042757947',
+            url: 'https://app.gpstrack.in/url/7dnvmSVV',
+            pickUpPoints: ['Redhills', 'Kalliluppam', 'Vaishnavi Nagar', 'Avadi', 'Nemilichery', 'Kakkalur Bypass', 'Sriperumbudur', 'JIT Campus']
         },
         {
             id: 7,
-            number: '08',
-            name: 'ARCOT',
+            number: '07',
+            name: 'CHEYYAR',
             busNumber: 'TN-17-JIT-1007',
             status: 'REROUTED',
             availability: 'rerouted',
-            driverName: 'Mr. Ramesh',
-            driverPhone: '+919876543216',
-            url: 'https://app.gpstrack.in/url/HMTpbrEJ',
+            driverName: 'Mr. Vadivel',
+            driverPhone: '+919788888604',
+            url: 'https://app.gpstrack.in/url/zRGdhirS',
             pickUpPoints: ['Arcot', 'Walajapet', 'Kaveripakkam', 'Balu Chetty Chatram', 'Kanchipuram Bypass', 'JIT Campus']
         },
         {
             id: 8,
+            number: '08',
+            name: 'ARCOT',
+            busNumber: 'TN-18-JIT-1008',
+            status: 'REROUTED',
+            availability: 'rerouted',
+            driverName: 'Mr. Naveen Kumar',
+            driverPhone: '+919944216762',
+            url: 'https://app.gpstrack.in/url/nsAIMw1W',
+            pickUpPoints: ['Arcot', 'Walajapet', 'Kaveripakkam', 'Balu Chetty Chatram', 'Kanchipuram Bypass', 'JIT Campus']
+        },
+        {
+            id: 9,
             number: '09',
             name: 'CHENGALPATTU',
             busNumber: 'TN-18-JIT-1008',
             status: 'ON TIME',
             availability: 'available',
-            driverName: 'Mr. Ganesh',
-            driverPhone: '+919876543217',
-            url: 'https://app.gpstrack.in/url/iYpoUsyB',
-            pickUpPoints: ['Chengalpattu', 'Paranur', 'Singaperumal Koil', 'Maraimalai Nagar', 'Guduvanchery', 'Vandalur', 'JIT Campus']
+            driverName: 'Mr. Anandan',
+            driverPhone: '+919444661139',
+            url: 'https://app.gpstrack.in/url/k6qOMEnu',
+            pickUpPoints: ['Chengalpattu Bypass', 'Paranur', 'Singaperumal Koil', 'Maraimalai Nagar', 'Guduvanchery', 'Vandalur', 'JIT Campus']
         },
         {
-            id: 9,
+            id: 10,
             number: '10',
             name: 'THIRUTHANI',
             busNumber: 'TN-19-JIT-1009',
             status: 'CANCELLED',
             availability: 'not-available',
-            driverName: 'Mr. Moorthy',
-            driverPhone: '+919876543218',
-            url: 'https://app.gpstrack.in/url/BkMdpXMx',
+            driverName: 'Mr. Ravi',
+            driverPhone: '+919445164676',
+            url: 'https://app.gpstrack.in/url/ZR8mCneg',
             pickUpPoints: ['Thiruthani', 'Arakkonam', 'Thakkolam', 'Perambakkam', 'Sunguvarchatram', 'JIT Campus']
         },
         {
-            id: 10,
+            id: 11,
             number: '11',
             name: 'VANDHAVASI',
             busNumber: 'TN-20-JIT-1010',
-            status: 'ON TIME',
-            availability: 'available',
-            driverName: 'Mr. Babu',
-            driverPhone: '+919876543219',
+            status: 'CANCELLED',
+            availability: 'not-available',
+            driverName: 'Mr. Murugan',
+            driverPhone: '+919791931561',
             url: 'https://app.gpstrack.in/url/N5FjbmAL',
             pickUpPoints: ['Vandhavasi', 'Thellar', 'Desur', 'Kanchipuram', 'Sunguvarchatram', 'JIT Campus']
         },
         {
-            id: 11,
+            id: 12,
             number: '12',
             name: 'VENGAI VASAL',
             busNumber: 'TN-21-JIT-1011',
@@ -186,11 +198,23 @@ const Transport: React.FC = () => {
             availability: 'available',
             driverName: 'Mr. Selvam',
             driverPhone: '+919876543220',
-            url: 'https://app.gpstrack.in/url/5b26EYP6',
+            url: 'https://app.gpstrack.in/url/z2eIb665',
             pickUpPoints: ['Vengai Vasal', 'Sembakkam', 'Camp Road', 'Tambaram', 'Perungalathur', 'JIT Campus']
         },
         {
-            id: 12,
+            id: 13,
+            number: '13',
+            name: 'KILAMBI',
+            busNumber: 'TN-22-JIT-1012',
+            status: 'ON TIME',
+            availability: 'available',
+            driverName: 'Mr. Karthik',
+            driverPhone: '+919876543221',
+            url: 'https://app.gpstrack.in/url/h7sc2F7d',
+            pickUpPoints: ['Ashok Pillar', 'KK Nagar', 'Vadapalani', 'Valasaravakkam', 'Porur', 'JIT Campus']
+        },
+        {
+            id: 14,
             number: '14',
             name: 'ASHOKEPILLAR',
             busNumber: 'TN-22-JIT-1012',
@@ -198,25 +222,25 @@ const Transport: React.FC = () => {
             availability: 'available',
             driverName: 'Mr. Karthik',
             driverPhone: '+919876543221',
-            url: 'https://app.gpstrack.in/url/4Kid5TNH',
+            url: 'https://app.gpstrack.in/url/dysn23Hz',
             pickUpPoints: ['Ashok Pillar', 'KK Nagar', 'Vadapalani', 'Valasaravakkam', 'Porur', 'JIT Campus']
         },
         {
-            id: 13,
+            id: 15,
             number: '15',
             name: 'CHENGALPATTU',
             busNumber: 'TN-23-JIT-1013',
             status: 'ON TIME',
             availability: 'available',
-            driverName: 'Mr. Palani',
-            driverPhone: '+919876543222',
-            url: 'https://app.gpstrack.in/url/NdopYWtG',
+            driverName: 'Mr. Sakthivel',
+            driverPhone: '+919962166053',
+            url: 'https://app.gpstrack.in/url/s6rNSOCS',
             pickUpPoints: ['Chengalpattu New Bus Stand', 'Mahindra World City', 'Singaperumal Koil', 'Walajabad', 'JIT Campus']
         },
         {
-            id: 14,
+            id: 16,
             number: '16',
-            name: 'TN21 AU9096',
+            name: 'ROUTE',
             busNumber: 'TN-24-JIT-1014',
             status: 'ON TIME',
             availability: 'available',
@@ -226,7 +250,7 @@ const Transport: React.FC = () => {
             pickUpPoints: ['Kanchipuram HO', 'Collectorate', 'Orikkai', 'Sevilimedu', 'Sunguvarchatram', 'JIT Campus']
         },
         {
-            id: 15,
+            id: 17,
             number: '17',
             name: 'THAKKOLAM',
             busNumber: 'TN-25-JIT-1015',
@@ -502,7 +526,7 @@ const Transport: React.FC = () => {
                                                 : 'bg-white border-slate-200 hover:border-brand-blue/30 hover:shadow-md'
                                                 }`}>
 
-                                                <div className="p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                                                <div className="p-3 flex flex-col md:flex-row md:items-center justify-start gap-3 md:gap-4">
                                                     {/* Route Info */}
                                                     <div className="flex items-center gap-3 min-w-0 md:w-[320px] md:flex-shrink-0">
                                                         <button
@@ -554,7 +578,7 @@ const Transport: React.FC = () => {
                                                     </div>
 
                                                     {/* Actions Group */}
-                                                    <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                                                    <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto md:ml-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                                                         {/* Desktop Driver Name */}
                                                         <div className="hidden md:flex flex-col items-end mr-1">
                                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">DRIVER</span>

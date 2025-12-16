@@ -6,7 +6,7 @@ import Transport from './Pages/Transport';
 import Hero from './components/Hero';
 import Contact from './Pages/Contact';
 import About from './Pages/About';
-import WelcomeSlideshowModal from './components/WelcomeSlideshowModal';
+
 
 export type Page = 'Home' | 'Route' | 'About' | 'Contact';
 
@@ -53,7 +53,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-brand-secondary flex flex-col font-sans">
-      <WelcomeSlideshowModal />
+
       <Navbar currentPage={currentPage} onNavigate={setCurrentPage} />
       <main className="flex-grow">
         {renderPage()}
