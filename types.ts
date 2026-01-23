@@ -1,13 +1,25 @@
-export interface BusRoute {
+
+export interface LibraryResource {
   id: string;
-  routeNumber: string;
-  origin: string;
-  destination: string;
-  via: string[];
-  departureTime: string;
-  driverName: string;
-  driverContact: string;
-  status: 'On Time' | 'Delayed' | 'Departed';
+  categoryCode: string;
+  title: string;
+  section: string;
+  shelfLocation: string[];
+  lastUpdate: string;
+  librarianName: string;
+  librarianContact: string;
+  status: 'Available' | 'Limited' | 'Processing';
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  subject: string;
+  isbn: string;
+  semester: number;
+  branch: 'CS' | 'IT' | 'ECE' | 'Mechanical' | 'Civil' | 'General';
+  status: 'Available' | 'Issued' | 'Reserved';
 }
 
 export interface Announcement {
@@ -21,4 +33,10 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   isError?: boolean;
+}
+
+export interface StudentProfile {
+  name: string;
+  regNo: string;
+  semester: number;
 }

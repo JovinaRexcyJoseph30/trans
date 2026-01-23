@@ -1,85 +1,99 @@
-import { BusRoute, Announcement } from './types';
 
-export const BUS_ROUTES: BusRoute[] = [
+import { LibraryResource, Announcement, Book } from './types';
+
+export const LIBRARY_RESOURCES: LibraryResource[] = [
   {
     id: '1',
-    routeNumber: '1',
-    origin: 'Ernaoor',
-    destination: 'JIT Campus',
-    via: ['Thiruvottiyur', 'Tondiarpet', 'Tollgate', 'Royapuram', 'Central', 'Koyambedu', 'Maduravoyal'],
-    departureTime: '06:10 AM',
-    driverName: 'R. Kumar',
-    driverContact: '+91 98765 43210',
-    status: 'On Time'
+    categoryCode: 'CS-01',
+    title: 'Computer Science & Engineering',
+    section: 'First Floor - A Block',
+    shelfLocation: ['Data Structures', 'Algorithms', 'Operating Systems', 'Cloud Computing', 'AI & ML'],
+    lastUpdate: 'Updated 10 mins ago',
+    librarianName: 'Dr. S. Ramesh',
+    librarianContact: '+91 74012 22005',
+    status: 'Available'
   },
   {
     id: '2',
-    routeNumber: '2',
-    origin: 'Manali',
-    destination: 'JIT Campus',
-    via: ['Madhavaram', 'Moolakadai', 'Perambur', 'Anna Nagar', 'Thirumangalam', 'Mogappair'],
-    departureTime: '06:15 AM',
-    driverName: 'S. Murugan',
-    driverContact: '+91 98765 12345',
-    status: 'Departed'
+    categoryCode: 'IT-02',
+    title: 'Information Technology',
+    section: 'First Floor - B Block',
+    shelfLocation: ['Web Development', 'Cyber Security', 'Database Management', 'Computer Networks'],
+    lastUpdate: 'Checked Today',
+    librarianName: 'Ms. K. Priya',
+    librarianContact: '+91 74012 22006',
+    status: 'Processing'
   },
   {
     id: '3',
-    routeNumber: '3',
-    origin: 'Thiruvanmiyur',
-    destination: 'JIT Campus',
-    via: ['Adyar', 'Kotturpuram', 'Saidapet', 'Guindy', 'Porur', 'Poonamallee'],
-    departureTime: '06:20 AM',
-    driverName: 'K. Venkatesh',
-    driverContact: '+91 98765 67890',
-    status: 'Delayed'
-  },
-  {
-    id: '4',
-    routeNumber: '4',
-    origin: 'Velachery',
-    destination: 'JIT Campus',
-    via: ['Vijaynagar', 'Medavakkam', 'Tambaram', 'Perungalathur', 'Padappai', 'Oragadam'],
-    departureTime: '06:25 AM',
-    driverName: 'P. Rajan',
-    driverContact: '+91 98765 98765',
-    status: 'On Time'
-  },
-  {
-    id: '5',
-    routeNumber: '5',
-    origin: 'Kasimedu',
-    destination: 'JIT Campus',
-    via: ['Kalmandapam', 'Royapuram', 'Beach Station', 'Parrys', 'Central', 'Poonamallee'],
-    departureTime: '06:10 AM',
-    driverName: 'M. Ali',
-    driverContact: '+91 98765 54321',
-    status: 'On Time'
+    categoryCode: 'EC-03',
+    title: 'Electronics & Communication',
+    section: 'Second Floor - C Block',
+    shelfLocation: ['Digital Electronics', 'Signals & Systems', 'Microprocessors', 'Embedded Systems'],
+    lastUpdate: 'Refilling Stock',
+    librarianName: 'Mr. V. Mani',
+    librarianContact: '+91 74012 22007',
+    status: 'Limited'
   }
+];
+
+export const SEMESTER_BOOKS: Book[] = [
+  // Semester 8
+  { id: 'b8-1', title: 'Professional Ethics in Engineering', author: 'Charles D. Fleddermann', subject: 'Ethics', isbn: '978-0132145213', semester: 8, branch: 'General', status: 'Available' },
+  
+  // Semester 7
+  { id: 'b7-1', title: 'Principles of Cloud Computing', author: 'P. Venkata Krishna', subject: 'Cloud', isbn: '978-1259026331', semester: 7, branch: 'CS', status: 'Available' },
+  { id: 'b7-2', title: 'Adhoc and Sensor Networks', author: 'C. Siva Ram Murthy', subject: 'Networks', isbn: '978-0131322387', semester: 7, branch: 'CS', status: 'Reserved' },
+
+  // Semester 6 - CS
+  { id: 'b1', title: 'Compiler Design', author: 'Alfred V. Aho', subject: 'Computer Science', isbn: '978-0321486813', semester: 6, branch: 'CS', status: 'Available' },
+  { id: 'b2', title: 'Cryptography and Network Security', author: 'William Stallings', subject: 'Cyber Security', isbn: '978-0134444284', semester: 6, branch: 'CS', status: 'Available' },
+  { id: 'b3', title: 'Mobile Computing', author: 'Raj Kamal', subject: 'IT', isbn: '978-0198068914', semester: 6, branch: 'IT', status: 'Issued' },
+  { id: 'b4', title: 'Artificial Intelligence', author: 'Stuart Russell', subject: 'Computer Science', isbn: '978-0136042594', semester: 6, branch: 'CS', status: 'Available' },
+  { id: 'b5', title: 'Cloud Computing Principles', author: 'Rajkumar Buyya', subject: 'Cloud', isbn: '978-0123848773', semester: 6, branch: 'CS', status: 'Available' },
+  
+  // Semester 5
+  { id: 'b5-1', title: 'Theory of Computation', author: 'Michael Sipser', subject: 'Theory', isbn: '978-1133187783', semester: 5, branch: 'CS', status: 'Available' },
+  { id: 'b5-2', title: 'Microprocessors and Interfacing', author: 'Douglas V. Hall', subject: 'Hardware', isbn: '978-0070601673', semester: 5, branch: 'ECE', status: 'Available' },
+
+  // Semester 4
+  { id: 'b6', title: 'Database System Concepts', author: 'Silberschatz', subject: 'DBMS', isbn: '978-0073523323', semester: 4, branch: 'CS', status: 'Available' },
+  { id: 'b7', title: 'Discrete Mathematics', author: 'Kenneth Rosen', subject: 'Mathematics', isbn: '978-0073383095', semester: 4, branch: 'General', status: 'Issued' },
+  { id: 'b8', title: 'Design and Analysis of Algorithms', author: 'Sartaj Sahni', subject: 'Algorithms', isbn: '978-8173716126', semester: 4, branch: 'CS', status: 'Available' },
+  
+  // Semester 3
+  { id: 'b3-1', title: 'Digital Design', author: 'Morris Mano', subject: 'Electronics', isbn: '978-0132774208', semester: 3, branch: 'ECE', status: 'Available' },
+
+  // Semester 2 - General
+  { id: 'b9', title: 'Engineering Physics', author: 'Gaur & Gupta', subject: 'Physics', isbn: '978-8189928223', semester: 2, branch: 'General', status: 'Available' },
+  { id: 'b10', title: 'Calculus and Linear Algebra', author: 'B.S. Grewal', subject: 'Mathematics', isbn: '978-8193328491', semester: 2, branch: 'General', status: 'Available' },
+
+  // Semester 1
+  { id: 'b1-1', title: 'Engineering Graphics', author: 'N.D. Bhatt', subject: 'Graphics', isbn: '978-9380358178', semester: 1, branch: 'General', status: 'Available' }
 ];
 
 export const ANNOUNCEMENTS: Announcement[] = [
   {
     id: '1',
-    title: 'Route 3 (Thiruvanmiyur) will be delayed by 10 mins due to traffic at Guindy.',
-    date: 'Today, 6:45 AM',
+    title: 'New arrival of IEEE Journals and Digital Magazines in the Reference Section.',
+    date: 'Today, 8:30 AM',
     priority: 'High'
   },
   {
     id: '2',
-    title: 'New AC Bus introduced for Velachery route starting next month.',
+    title: 'Library hours extended until 8:00 PM for the upcoming Semester Examinations.',
     date: 'Yesterday',
     priority: 'Normal'
   }
 ];
 
-export const SYSTEM_INSTRUCTION = `You are the AI Transport Assistant for Jeppiaar Institute of Technology (JIT). 
-You have access to the following bus route data:
-${JSON.stringify(BUS_ROUTES.map(r => ({ ...r, via: r.via.join(', ') })))}
+export const SYSTEM_INSTRUCTION = `You are the AI Library Assistant for Jeppiaar Institute of Technology (JIT). 
+You have access to the library resource database:
+${JSON.stringify(LIBRARY_RESOURCES.map(r => ({ ...r, shelfLocation: r.shelfLocation.join(', ') })))}
 
-Your goal is to help students and staff find their bus, know the timings, and get driver contact info.
-- If asked about a location not listed, suggest the closest known stop from the 'via' lists.
-- Be concise and helpful.
-- If asked for driver numbers, provide them.
-- If asked about general transport rules, assume standard college bus rules (ID card mandatory, be at stop 5 mins early).
+Your goal is to help students and staff find books, know library hours, and get librarian contact info.
+- If asked for a specific book, check the shelfLocation lists in the database.
+- Library timings: Mon-Fri (8:00 AM - 6:00 PM), Extended during exams (8:00 AM - 8:00 PM).
+- Be professional, helpful, and concise.
+- If asked about rules, emphasize ID card usage and silence.
 `;
