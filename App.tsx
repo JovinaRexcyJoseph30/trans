@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import TransportAssistant from './components/TransportAssistant'; 
 import Footer from './components/Footer';
 import ResourceCard from './components/ResourceCard';
-import { SEMESTER_BOOKS } from './constants';
+import { SEMESTER_BOOKS, DIGITAL_RESOURCES } from './constants';
+import { sendMessageToGemini } from './services/geminiService';
 import { 
   Book as BookIcon, Images, ChevronRight, ClipboardList, MapPinned, 
   ExternalLink, Phone, Star, MapPin, ChevronDown, ChevronUp,
@@ -17,8 +18,10 @@ import {
   Network, BookCopy, GraduationCap as CourseIcon,
   Monitor, Wifi, Users, VolumeX, Coffee, Lock, LogOut, AlertCircle, BookOpen,
   ArrowLeft, Search as SearchIcon, Filter, ShoppingCart, History as HistoryIcon,
-  Layers, Check
+  Layers, Check, Wallet, Smartphone, QrCode, AlertTriangle, CreditCard, X,
+  CalendarCheck, CalendarX, Archive, ReceiptText, Eye, Link2, Library, Bot, Loader2
 } from 'lucide-react';
+import { ChatMessage } from './types';
 
 type TabType = 'facilities' | 'dashboard' | 'portal' | 'resources' | 'study-rooms' | 'gallery' | 'help-desk';
 type PortalView = 'dashboard' | 'reserve';
@@ -27,309 +30,212 @@ interface SupportRequest {
   id: string;
   studentName: string;
   regNumber: string;
+  email: string;
   message: string;
   timestamp: string;
-  status: 'Pending' | 'Responded';
-  response?: string;
 }
 
-interface DigitalLink {
-  no: number;
-  name: string;
-  url: string;
-}
-
-interface BorrowedBook {
+interface PastBorrowedBook {
   id: string;
   title: string;
   author: string;
+  semester: number;
+  borrowedDate: string; // ISO format: YYYY-MM-DD
+  returnedDate?: string; // ISO format
   isbn: string;
-  issueDate: string;
-  dueDate: string;
-  status: 'Borrowed' | 'Reserved' | 'Overdue';
+}
+
+interface SemesterRecord {
+  semester: number;
+  label: string;
+  borrowedCount: number;
+  overdueCount: number;
+  hasDues: boolean;
 }
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('facilities');
   const [portalSubView, setPortalSubView] = useState<PortalView>('dashboard');
   
-  // Local state for books to allow simulated updates
-  const [books, setBooks] = useState(SEMESTER_BOOKS);
+  const [books] = useState(SEMESTER_BOOKS);
 
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [regNo, setRegNo] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [studentData, setStudentData] = useState({ name: 'Demo Student', regNo: '2026', semester: 6, branch: 'CS' });
+  const [studentData] = useState({ name: 'Aditya Kumar', regNo: '2026', semester: 6, branch: 'CS', email: 'aditya.k@jit.edu' });
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  // Reservation States
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterBranch, setFilterBranch] = useState<string>('all');
-  const [activeSemesterTab, setActiveSemesterTab] = useState<number>(6);
-  
-  // Modal State
-  const [modalData, setModalData] = useState<{
+  // Help Desk Chat State
+  const [hdMessages, setHdMessages] = useState<ChatMessage[]>([
+    { role: 'model', text: "Hi! I'm your Library Assistant. How can I help you today?" }
+  ]);
+  const [hdInput, setHdInput] = useState('');
+  const [isHdLoading, setIsHdLoading] = useState(false);
+  const [showEscalationForm, setShowEscalationForm] = useState(false);
+  const [escalationStatus, setEscalationStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // UI State
+  const [expandedSemesters, setExpandedSemesters] = useState<number[]>([5]);
+
+  // Semester History Data
+  const [pastHistory] = useState<PastBorrowedBook[]>([
+    { id: 'p-1', title: 'Digital Signal Processing', author: 'John G. Proakis', semester: 5, borrowedDate: '2023-11-01', isbn: '978-0131873742' },
+    { id: 'p-2', title: 'Computer Organization and Design', author: 'David Patterson', semester: 5, borrowedDate: '2023-12-15', returnedDate: '2024-02-10', isbn: '978-0124077263' },
+    { id: 'p-3', title: 'Software Engineering', author: 'Roger Pressman', semester: 5, borrowedDate: '2024-01-10', returnedDate: '2024-04-01', isbn: '978-0078022128' },
+    { id: 'p-4', title: 'Database Management Systems', author: 'Abraham Silberschatz', semester: 4, borrowedDate: '2023-06-10', returnedDate: '2023-09-05', isbn: '978-0073523323' }
+  ]);
+
+  // Semester Summary Data
+  const [semesterRecords] = useState<SemesterRecord[]>([
+    { semester: 5, label: 'V Semester', borrowedCount: 3, overdueCount: 1, hasDues: true },
+    { semester: 4, label: 'IV Semester', borrowedCount: 1, overdueCount: 0, hasDues: false },
+    { semester: 3, label: 'III Semester', borrowedCount: 2, overdueCount: 0, hasDues: false }
+  ]);
+
+  // Payment State
+  const [paymentModal, setPaymentModal] = useState<{
     isOpen: boolean;
-    book: any | null;
-    action: 'Reserved' | 'Checked Out' | '';
-    dueDate?: string;
-  }>({ isOpen: false, book: null, action: '' });
+    items: { title: string; days: number; amount: number }[];
+    status: 'idle' | 'processing' | 'success';
+  }>({ isOpen: false, items: [], status: 'idle' });
 
-  // Help Desk States
-  const [chatInput, setChatInput] = useState('');
-  const [requests, setRequests] = useState<SupportRequest[]>([]);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [hdMessages, isHdLoading]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (regNo === '2026' && password === '123456') {
       setIsAuthenticated(true);
       setLoginError('');
-      setPortalSubView('dashboard');
-      setActiveSemesterTab(studentData.semester);
     } else {
-      setLoginError('Invalid Register Number or Password. Hint: 2026 / 123456');
+      setLoginError('Invalid credentials. Use 2026 / 123456');
     }
   };
 
-  const handleLogout = () => {
+  const confirmLogout = () => {
     setIsAuthenticated(false);
     setRegNo('');
     setPassword('');
+    setIsLogoutModalOpen(false);
+    setPortalSubView('dashboard');
   };
 
-  const handleBorrowAction = (bookId: string, action: 'Checkout' | 'Reserve') => {
-    if (!isAuthenticated) {
-      alert("Please login to your Student Portal to perform library actions.");
-      setActiveTab('portal');
-      return;
-    }
-
-    const book = books.find(b => b.id === bookId);
-    if (!book) return;
-
-    if (book.semester !== studentData.semester) {
-      alert(`Access Restricted: You can only borrow/reserve books for Semester ${studentData.semester}. This book belongs to Semester ${book.semester}.`);
-      return;
-    }
-
-    let dueDate = '';
-    if (action === 'Checkout') {
-      const today = new Date();
-      const returnDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
-      dueDate = returnDate.toLocaleDateString('en-GB');
-      
-      setBooks(prev => prev.map(b => b.id === bookId ? { ...b, status: 'Issued' as const } : b));
-      setModalData({ isOpen: true, book, action: 'Checked Out', dueDate });
-    } else {
-      setBooks(prev => prev.map(b => b.id === bookId ? { ...b, status: 'Reserved' as const } : b));
-      setModalData({ isOpen: true, book, action: 'Reserved' });
-    }
+  const toggleSemester = (sem: number) => {
+    setExpandedSemesters(prev => 
+      prev.includes(sem) ? prev.filter(s => s !== sem) : [...prev, sem]
+    );
   };
 
-  const handleSendRequest = () => {
-    if (!chatInput.trim()) return;
+  const calculateDueStatus = (borrowedDateStr: string, returnedDateStr?: string) => {
+    const borrowDate = new Date(borrowedDateStr);
+    const today = new Date();
+    const dueDate = new Date(borrowDate);
+    dueDate.setMonth(dueDate.getMonth() + 3);
 
-    const newRequest: SupportRequest = {
-      id: Date.now().toString(),
-      studentName: studentData.name,
-      regNumber: studentData.regNo,
-      message: chatInput,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'Pending'
+    if (returnedDateStr) {
+      return { status: 'Returned' as const, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CheckCircle2, label: 'Returned', border: 'border-emerald-100' };
+    }
+
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      const overdueDays = Math.abs(diffDays);
+      return { 
+        status: 'Overdue' as const, 
+        color: 'text-red-600', 
+        bg: 'bg-red-50', 
+        icon: AlertTriangle, 
+        label: 'Overdue',
+        days: overdueDays,
+        fine: overdueDays * 5, 
+        border: 'border-red-200'
+      };
+    }
+
+    return { 
+      status: 'Active' as const, 
+      color: 'text-blue-600', 
+      bg: 'bg-blue-50', 
+      icon: Clock, 
+      label: 'Within Due Period',
+      days: diffDays,
+      border: 'border-blue-100'
     };
-
-    setRequests(prev => [newRequest, ...prev]);
-    setChatInput('');
-    setShowConfirmation(true);
-    setTimeout(() => setShowConfirmation(false), 3000);
   };
 
-  const openAccessJournals: DigitalLink[] = [
-    { no: 1, name: "DOAJ (Directory of Open Access Journals)", url: "https://doaj.org/" },
-    { no: 2, name: "PLOS ONE", url: "https://journals.plos.org/plosone/" },
-    { no: 3, name: "BioMed Central", url: "https://www.biomedcentral.com/" },
-    { no: 4, name: "Scientific Reports (Nature)", url: "https://www.nature.com/srep/" },
-    { no: 5, name: "Nature Communications", url: "https://www.nature.com/ncomms/" },
-    { no: 6, name: "Elsevier Open Access", url: "https://www.elsevier.com/open-access" },
-    { no: 7, name: "SpringerOpen", url: "https://www.springeropen.com/" },
-    { no: 8, name: "Wiley Open Access", url: "https://authorservices.wiley.com/open-research/open-access/index.html" },
-    { no: 9, name: "Taylor & Francis Open", url: "https://www.tandfonline.com/openaccess" },
-    { no: 10, name: "SAGE Open", url: "https://journals.sagepub.com/home/sgo" },
-    { no: 11, name: "MDPI", url: "https://www.mdpi.com/" },
-    { no: 12, name: "Hindawi", url: "https://www.hindawi.com/" },
-    { no: 13, name: "Frontiers", url: "https://www.frontiersin.org/" },
-    { no: 14, name: "PeerJ", url: "https://peerj.com/" },
-    { no: 15, name: "ArXiv", url: "https://arxiv.org/" }
-  ];
+  const handleOpenPayment = (sem?: number) => {
+    const overdueItems: { title: string; days: number; amount: number }[] = [];
+    const targetBooks = sem ? pastHistory.filter(h => h.semester === sem) : pastHistory;
+    
+    targetBooks.forEach(book => {
+      const result = calculateDueStatus(book.borrowedDate, book.returnedDate);
+      if (result.status === 'Overdue') {
+        overdueItems.push({ title: book.title, days: result.days || 0, amount: result.fine || 0 });
+      }
+    });
+    
+    setPaymentModal({ isOpen: true, items: overdueItems, status: 'idle' });
+  };
 
-  const eLibrary: DigitalLink[] = [
-    { no: 1, name: "DELNET (Developing Library Network)", url: "http://delnet.in/" },
-    { no: 2, name: "J-Gate", url: "https://jgateplus.com/" },
-    { no: 3, name: "National Digital Library (NDL)", url: "https://ndl.iitkgp.ac.in/" },
-    { no: 4, name: "World Digital Library", url: "https://www.loc.gov/collections/world-digital-library/" },
-    { no: 5, name: "Shodhganga (Ph.D. Theses)", url: "https://shodhganga.inflibnet.ac.in/" },
-    { no: 6, name: "Shodhsindhu (E-Journal Consortium)", url: "https://ess.inflibnet.ac.in/" }
-  ];
+  const handleConfirmPayment = () => {
+    setPaymentModal(prev => ({ ...prev, status: 'processing' }));
+    setTimeout(() => {
+      setPaymentModal(prev => ({ ...prev, status: 'success' }));
+    }, 1500);
+  };
 
-  const eBookDatabases: DigitalLink[] = [
-    { no: 1, name: "Project Gutenberg", url: "https://www.gutenberg.org/" },
-    { no: 2, name: "Open Library", url: "https://openlibrary.org/" },
-    { no: 3, name: "Google Books", url: "https://books.google.com/" },
-    { no: 4, name: "BookBoon", url: "https://bookboon.com/" },
-    { no: 5, name: "Feedbooks", url: "https://www.feedbooks.com/" },
-    { no: 6, name: "ManyBooks", url: "https://manybooks.net/" },
-    { no: 7, name: "PDF Drive", url: "https://www.pdfdrive.com/" },
-    { no: 8, name: "Internet Archive", url: "https://archive.org/details/texts" },
-    { no: 9, name: "OAPEN", url: "https://www.oapen.org/" },
-    { no: 10, name: "DOAB (Directory of Open Access Books)", url: "https://www.doabooks.org/" },
-    { no: 11, name: "SpringerOpen Books", url: "https://www.springeropen.com/books" },
-    { no: 12, name: "InTechOpen", url: "https://www.intechopen.com/books" },
-    { no: 13, name: "Wikibooks", url: "https://en.wikibooks.org/" },
-    { no: 14, name: "Free-Ebooks.net", url: "https://www.free-ebooks.net/" },
-    { no: 15, name: "Loyal Books", url: "http://www.loyalbooks.com/" },
-    { no: 16, name: "GetFreeEBooks", url: "https://www.getfreeereader.com/" },
-    { no: 17, name: "O'Reilly Open Books", url: "https://www.oreilly.com/openbook/" },
-    { no: 18, name: "Baen Free Library", url: "https://www.baen.com/allbooks/category/index/id/2012" },
-    { no: 19, name: "Smashwords", url: "https://www.smashwords.com/books/category/1/newest/0/free/any" },
-    { no: 20, name: "Scribd (Free section)", url: "https://www.scribd.com/" },
-    { no: 21, name: "PDFBooksWorld", url: "https://www.pdfbooksworld.com/" },
-    { no: 22, name: "FreeComputerBooks", url: "http://freecomputerbooks.com/" },
-    { no: 23, name: "OnlineProgrammingBooks", url: "https://www.onlineprogrammingbooks.com/" },
-    { no: 24, name: "TechBooksForFree", url: "http://www.techbooksforfree.com/" },
-    { no: 25, name: "BookYards", url: "https://www.bookyards.com/" },
-    { no: 26, name: "KnowFree", url: "https://knowfree.tradepub.com/" },
-    { no: 27, name: "Digital Library of India", url: "http://www.dli.gov.in/" },
-    { no: 28, name: "Questia", url: "https://www.questia.com/" },
-    { no: 29, name: "ReadPrint", url: "http://www.readprint.com/" },
-    { no: 30, name: "Z-Library (Reference)", url: "https://z-lib.org/" }
-  ];
+  const handleHdSend = async (forcedText?: string) => {
+    const text = forcedText || hdInput.trim();
+    if (!text || isHdLoading) return;
 
-  const freeCourseMaterials: DigitalLink[] = [
-    { no: 1, name: "NPTEL (Swayam)", url: "https://nptel.ac.in/" },
-    { no: 2, name: "MIT OpenCourseWare", url: "https://ocw.mit.edu/" },
-    { no: 3, name: "Coursera (Free Courses)", url: "https://www.coursera.org/courses?query=free" },
-    { no: 4, name: "edX (Audit Track)", url: "https://www.edx.org/" },
-    { no: 5, name: "Khan Academy", url: "https://www.khanacademy.org/" },
-    { no: 6, name: "Udacity (Free Courses)", url: "https://www.udacity.com/courses/all" },
-    { no: 7, name: "Udemy (Free Selection)", url: "https://www.udemy.com/courses/free/" },
-    { no: 8, name: "Stanford Online", url: "https://online.stanford.edu/free-courses" },
-    { no: 9, name: "Harvard Online", url: "https://online-learning.harvard.edu/catalog/free" },
-    { no: 10, name: "Open Yale Courses", url: "https://oyc.yale.edu/" },
-    { no: 11, name: "Carnegie Mellon OLI", url: "https://oli.cmu.edu/" },
-    { no: 12, name: "Academic Earth", url: "https://academicearth.org/" },
-    { no: 13, name: "FutureLearn", url: "https://www.futurelearn.com/" },
-    { no: 14, name: "Saylor Academy", url: "https://www.saylor.org/" },
-    { no: 15, name: "Alison", url: "https://alison.com/" },
-    { no: 16, name: "Codecademy (Free)", url: "https://www.codecademy.com/" },
-    { no: 17, name: "freeCodeCamp", url: "https://www.freecodecamp.org/" },
-    { no: 18, name: "W3Schools", url: "https://www.w3schools.com/" },
-    { no: 19, name: "Tutorialspoint", url: "https://www.tutorialspoint.com/" },
-    { no: 20, name: "GeeksforGeeks", url: "https://www.geeksforgeeks.org/" },
-    { no: 21, name: "OpenLearning", url: "https://www.openlearning.com/" },
-    { no: 22, name: "Swayam Prabha", url: "https://www.swayamprabha.gov.in/" }
-  ];
+    const userMsg = text;
+    setHdInput('');
+    setHdMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setIsHdLoading(true);
+
+    try {
+      const history = hdMessages.map(m => ({ role: m.role, parts: [{ text: m.text }] }));
+      const response = await sendMessageToGemini(userMsg, history);
+      if (response) {
+        setHdMessages(prev => [...prev, { role: 'model', text: response }]);
+      }
+    } catch (error) {
+      setHdMessages(prev => [...prev, { 
+        role: 'model', 
+        text: "AI assistant is temporarily unavailable. Please contact the librarian.", 
+        isError: true 
+      }]);
+    } finally {
+      setIsHdLoading(false);
+    }
+  };
+
+  const handleEscalationSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setEscalationStatus('submitting');
+    setTimeout(() => {
+      setEscalationStatus('success');
+      setTimeout(() => {
+        setShowEscalationForm(false);
+        setEscalationStatus('idle');
+      }, 3000);
+    }, 1500);
+  };
 
   const sidebarItems: { id: TabType, label: string, icon: any, desc: string }[] = [
     { id: 'facilities', label: 'Library Facilities', icon: BookIcon, desc: 'Overview & Hours' },
     { id: 'dashboard', label: 'Academic Dashboard', icon: LayoutDashboard, desc: 'Stats & Analytics' },
-    { id: 'portal', label: 'Student Portal', icon: GraduationCap, desc: 'Borrowed & Due' },
+    { id: 'portal', label: 'Student Portal', icon: GraduationCap, desc: 'Borrowed & History' },
     { id: 'resources', label: 'Digital Resources', icon: Laptop, desc: 'OPAC & E-Books' },
-    { id: 'study-rooms', label: 'Study Rooms', icon: School, desc: 'Group Discussions' },
-    { id: 'gallery', label: 'Library Gallery', icon: Images, desc: 'Facility Photos' },
     { id: 'help-desk', label: 'Help Desk', icon: HelpCircle, desc: 'Support & FAQs' }
   ];
 
-  const stats = [
-    { title: "Total Books Collection", value: "25,000+", desc: "Overall physical book inventory", icon: BookIcon, color: "bg-brand-navy", text: "text-white", subText: "text-blue-200" },
-    { title: "Digital Resources", value: "10,000+", desc: "E-books, journals, and databases", icon: Laptop, color: "bg-white", text: "text-slate-800", subText: "text-slate-500" },
-    { title: "Books Currently Issued", value: "1,250", desc: "Active borrowings", icon: UserCheck, color: "bg-blue-50", text: "text-slate-800", subText: "text-slate-500" },
-    { title: "Available Books", value: "23,750", desc: "Ready for borrowing", icon: CheckCircle2, color: "bg-brand-navy", text: "text-white", subText: "text-blue-200" },
-    { title: "Active Student Users", value: "3,200+", desc: "Daily library service utilization", icon: GraduationCap, color: "bg-white", text: "text-slate-800", subText: "text-slate-500" },
-    { title: "Research Journals Access", value: "1,500+", desc: "National & international journals", icon: FileText, color: "bg-blue-50", text: "text-slate-800", subText: "text-slate-500" }
-  ];
-
-  const myBorrowedBooks: BorrowedBook[] = [
-    { 
-      id: '1', 
-      title: 'Modern Operating Systems (4th Edition)', 
-      author: 'Andrew S. Tanenbaum',
-      isbn: '978-0133591620',
-      issueDate: '2024-02-10', 
-      dueDate: '2024-02-24', 
-      status: 'Borrowed' 
-    },
-    { 
-      id: '2', 
-      title: 'Clean Code', 
-      author: 'Robert C. Martin',
-      isbn: '978-0132350884',
-      issueDate: '2024-01-15', 
-      dueDate: '2024-01-29', 
-      status: 'Overdue' 
-    },
-    { 
-      id: '3', 
-      title: 'Introduction to Algorithms', 
-      author: 'Thomas H. Cormen',
-      isbn: '978-0262033848',
-      issueDate: '2024-02-18', 
-      dueDate: '2024-03-03', 
-      status: 'Reserved' 
-    },
-  ];
-
-  const currentSemesterBooks = books.filter(b => b.semester === studentData.semester);
-  
-  const filteredReservationBooks = books.filter(b => {
-    const matchesSearch = 
-      b.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      b.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.isbn.includes(searchQuery) ||
-      b.subject.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesBranch = filterBranch === 'all' || b.branch === filterBranch || b.branch === 'General';
-    const matchesSemester = b.semester === activeSemesterTab;
-    return matchesSearch && matchesBranch && matchesSemester;
-  });
-
-  const TableComponent: React.FC<{ title: string, icon: any, data: DigitalLink[] }> = ({ title, icon: Icon, data }) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
-      <div className="px-5 py-4 lg:px-6 lg:py-5 bg-slate-50 border-b border-slate-100 flex items-center gap-3">
-        <Icon className="w-5 h-5 text-brand-blue" />
-        <h3 className="font-bold text-brand-navy tracking-tight text-sm lg:text-base">{title}</h3>
-      </div>
-      <div className="p-0 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
-        <table className="w-full text-left text-sm border-collapse min-w-[500px]">
-          <thead>
-            <tr className="bg-white border-b border-slate-100">
-              <th className="px-4 py-3 lg:px-6 font-bold text-slate-400 uppercase tracking-widest text-[10px] w-16">S. No</th>
-              <th className="px-4 py-3 lg:px-6 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Name of Provider / Database</th>
-              <th className="px-4 py-3 lg:px-6 font-bold text-slate-400 uppercase tracking-widest text-[10px] text-right">Access URL</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((item) => (
-              <tr key={item.no} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors group">
-                <td className="px-4 py-3 lg:px-6 text-slate-500 font-mono text-xs">{item.no}</td>
-                <td className="px-4 py-3 lg:px-6 text-slate-800 font-medium group-hover:text-brand-blue transition-colors text-xs lg:text-sm">{item.name}</td>
-                <td className="px-4 py-3 lg:px-6 text-right">
-                  <a 
-                    href={item.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="inline-flex items-center gap-1.5 text-brand-blue hover:underline font-bold text-[10px] lg:text-xs min-h-[44px] px-2"
-                  >
-                    Visit <ExternalLink className="w-3 h-3" />
-                  </a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const totalOverdueCount = semesterRecords.reduce((acc, curr) => acc + curr.overdueCount, 0);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans overflow-x-hidden">
@@ -338,644 +244,601 @@ const App: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 py-6 lg:py-12 flex-grow w-full">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
           
-          {/* Sidebar Menu */}
+          {/* SIDE NAVIGATION */}
           <div className="w-full lg:w-80 flex-shrink-0">
             <div className="lg:sticky lg:top-24">
-              <div className="bg-brand-navy rounded-2xl p-6 mb-6 shadow-xl relative overflow-hidden">
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-2 opacity-80">
-                    <Database className="w-4 h-4 text-brand-blue" />
-                    <span className="text-[10px] lg:text-xs font-bold text-white uppercase tracking-widest">Library Portal</span>
-                  </div>
-                  <h2 className="text-xl lg:text-2xl font-bold text-white">Central Library</h2>
-                  <p className="text-blue-100 text-xs lg:text-sm mt-1">JIT Resource Hub</p>
-                </div>
-              </div>
-
               <nav className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
                 {sidebarItems.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      if (item.id === 'portal') setPortalSubView('dashboard');
-                    }}
-                    className={`w-full text-left rounded-xl p-3 lg:p-4 transition-all duration-300 border-2 min-h-[64px] ${
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full text-left rounded-2xl p-4 transition-all duration-300 border-2 ${
                       activeTab === item.id 
                         ? 'bg-brand-navy border-brand-navy shadow-lg text-white' 
-                        : 'bg-white border-white hover:border-brand-blue/30 text-slate-800'
+                        : 'bg-white border-white hover:border-brand-blue/30 text-slate-800 shadow-sm'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 lg:gap-4">
-                        <item.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${activeTab === item.id ? 'text-brand-blue' : 'text-slate-400'}`} />
-                        <div>
-                          <h3 className="font-bold text-xs lg:text-sm">{item.label}</h3>
-                          <p className={`text-[10px] lg:text-xs ${activeTab === item.id ? 'text-blue-200' : 'text-slate-500'}`}>{item.desc}</p>
-                        </div>
+                    <div className="flex items-center gap-4">
+                      <div className={`p-2 rounded-xl ${activeTab === item.id ? 'bg-brand-blue text-white' : 'bg-slate-50 text-slate-400'}`}>
+                        <item.icon className="w-5 h-5" />
                       </div>
-                      <ChevronRight className="w-4 h-4 opacity-50" />
+                      <div>
+                        <h3 className="font-bold text-sm tracking-tight">{item.label}</h3>
+                        <p className={`text-[11px] ${activeTab === item.id ? 'text-blue-200' : 'text-slate-500'}`}>{item.desc}</p>
+                      </div>
                     </div>
                   </button>
                 ))}
               </nav>
-
-              <div className="mt-6 bg-white border border-slate-200 rounded-2xl p-5 text-center shadow-sm">
-                <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 text-brand-blue">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Chief Librarian</p>
-                <a href="tel:+917401222005" className="block text-lg font-bold text-brand-navy hover:text-brand-blue font-mono min-h-[44px] flex items-center justify-center">+91 74012 22005</a>
-              </div>
             </div>
           </div>
 
-          {/* Main Content Area */}
+          {/* MAIN CONTENT AREA */}
           <div className="flex-1 min-w-0">
             {activeTab === 'facilities' && <Hero />}
-
-            {activeTab === 'dashboard' && (
-              <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-500">
-                <div className="bg-white rounded-2xl p-6 lg:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-[10px] font-bold text-brand-blue tracking-widest uppercase mb-1 lg:mb-2">Library Intelligence</h2>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-brand-navy">Academic Dashboard</h1>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-xl text-brand-blue self-start md:self-center">
-                    <BarChart3 className="w-4 h-4 lg:w-5 lg:h-5" />
-                    <span className="text-[10px] lg:text-sm font-bold uppercase tracking-wide">Live Data Sync</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-                  {stats.map((stat, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`${stat.color} p-5 lg:p-6 rounded-2xl shadow-sm border ${stat.color === 'bg-white' ? 'border-slate-200' : 'border-transparent'} transition-all hover:scale-[1.01] duration-300`}
-                    >
-                      <div className="flex justify-between items-start mb-3 lg:mb-4">
-                        <div className={`p-2.5 rounded-xl ${stat.color === 'bg-brand-navy' ? 'bg-white/10' : 'bg-brand-navy/5'}`}>
-                          <stat.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${stat.color === 'bg-brand-navy' ? 'text-brand-blue' : 'text-brand-navy'}`} />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <p className={`text-3xl lg:text-4xl font-extrabold font-mono tracking-tight ${stat.text}`}>{stat.value}</p>
-                        <h3 className={`text-[10px] lg:text-sm font-bold uppercase tracking-wide ${stat.text}`}>{stat.title}</h3>
-                        <p className={`text-[10px] leading-relaxed mt-1.5 ${stat.subText}`}>{stat.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'resources' && (
-              <div className="space-y-8 lg:space-y-10 animate-in fade-in duration-500">
-                <div className="bg-brand-navy rounded-2xl p-6 lg:p-10 text-white relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-8 opacity-10 hidden sm:block">
-                      <Laptop className="w-24 h-24 lg:w-32 lg:h-32" />
-                   </div>
-                   <h2 className="text-[10px] font-bold text-brand-blue tracking-widest uppercase mb-2">Knowledge Repository</h2>
-                   <h1 className="text-2xl lg:text-4xl font-extrabold tracking-tight">Digital Resources</h1>
-                   <p className="text-blue-100 text-xs lg:text-sm mt-3 max-w-2xl leading-relaxed">Access academic journals, e-books, and certification courses through our global digital partnerships.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                  <TableComponent title="Open Access Journals" icon={Globe} data={openAccessJournals} />
-                  <TableComponent title="E-Library Resources" icon={Network} data={eLibrary} />
-                  <TableComponent title="E-Books Databases" icon={BookCopy} data={eBookDatabases} />
-                  <TableComponent title="Free Course Materials" icon={CourseIcon} data={freeCourseMaterials} />
-                </div>
-              </div>
-            )}
 
             {activeTab === 'portal' && (
               <div className="animate-in fade-in duration-500">
                 {!isAuthenticated ? (
                   <div className="max-w-md mx-auto py-12 px-4">
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                      <div className="bg-brand-navy p-8 text-center text-white">
-                        <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
-                          <Lock className="w-8 h-8 text-brand-blue" />
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden">
+                      <div className="bg-brand-navy p-10 text-center text-white relative">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-brand-blue"></div>
+                        <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/20">
+                          <Lock className="w-10 h-10 text-brand-blue" />
                         </div>
-                        <h2 className="text-2xl font-bold tracking-tight">Student Portal Login</h2>
-                        <p className="text-blue-100 text-xs mt-2 uppercase tracking-widest font-bold">Access personal academic library dashboard</p>
+                        <h2 className="text-3xl font-black tracking-tight uppercase">Library Portal</h2>
+                        <p className="text-blue-200 text-[10px] font-bold tracking-[0.3em] uppercase mt-2">Authentic Access Required</p>
                       </div>
-                      <form onSubmit={handleLogin} className="p-8 space-y-6">
-                        {loginError && (
-                          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-bold animate-in shake duration-300">
-                            <AlertCircle className="w-5 h-5 shrink-0" />
-                            <span>{loginError}</span>
-                          </div>
-                        )}
-                        <div className="space-y-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Register Number</label>
+                      <form onSubmit={handleLogin} className="p-10 space-y-6">
+                        {loginError && <div className="p-4 bg-red-50 text-red-600 text-xs font-bold rounded-2xl border border-red-100 flex items-center gap-3"><AlertCircle className="w-4 h-4" />{loginError}</div>}
+                        <div className="space-y-5">
+                          <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Register Number</label>
                             <div className="relative">
-                              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                              <input 
-                                type="text" 
-                                value={regNo}
-                                onChange={(e) => setRegNo(e.target.value)}
-                                placeholder="e.g. 2026"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-mono"
-                                required
-                              />
+                              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                              <input type="text" value={regNo} onChange={(e) => setRegNo(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all" placeholder="2026" required />
                             </div>
                           </div>
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Password</label>
+                          <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Password</label>
                             <div className="relative">
-                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                              <input 
-                                type="password" 
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-mono"
-                                required
-                              />
+                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all" placeholder="••••••••" required />
                             </div>
                           </div>
                         </div>
-                        <button 
-                          type="submit"
-                          className="w-full py-4 bg-brand-navy hover:bg-brand-blue text-white rounded-xl font-bold text-sm tracking-widest uppercase transition-all shadow-lg active:scale-[0.98] min-h-[48px]"
-                        >
-                          Login to Portal
-                        </button>
+                        <button type="submit" className="w-full py-5 bg-brand-navy text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-brand-blue transition-all shadow-xl active:scale-95">Login to Portal</button>
                       </form>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-                    {/* Authenticated Dashboard View */}
-                    {portalSubView === 'dashboard' ? (
-                      <div className="space-y-8">
-                        <div className="bg-white rounded-2xl p-6 lg:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-                          <div className="flex items-center gap-4 lg:gap-6">
-                            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-brand-blue border border-brand-blue/10 shrink-0">
-                              <GraduationCap className="w-8 h-8" />
-                            </div>
-                            <div>
-                              <h2 className="text-[10px] font-bold text-brand-blue tracking-widest uppercase mb-1">Student Session</h2>
-                              <h1 className="text-2xl lg:text-3xl font-bold text-brand-navy">Welcome, {studentData.name}</h1>
-                              <p className="text-xs text-slate-500 mt-1 font-mono uppercase tracking-widest">REG NO: {studentData.regNo} | Semester: {studentData.semester} | Branch: {studentData.branch}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button 
-                              onClick={() => setPortalSubView('reserve')}
-                              className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-navy text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-brand-blue transition-all min-h-[44px] shadow-lg"
-                            >
-                              <Layers className="w-4 h-4" />
-                              Semester Catalog
-                            </button>
-                            <button 
-                              onClick={handleLogout}
-                              className="flex items-center justify-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl font-bold text-xs uppercase tracking-widest border border-red-100 hover:bg-red-100 transition-all min-h-[44px]"
-                            >
-                              <LogOut className="w-4 h-4" />
-                              Logout
-                            </button>
-                          </div>
+                  <div className="space-y-8 lg:space-y-12">
+                    <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+                      <div className="absolute top-0 left-0 w-2 h-full bg-brand-blue"></div>
+                      <div className="flex items-center gap-5">
+                        <div className="w-16 h-16 bg-blue-50 rounded-[1.5rem] flex items-center justify-center text-brand-blue shrink-0 border border-blue-100">
+                          <User className="w-8 h-8" />
                         </div>
-
-                        {/* My Semester Books Section */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                           <div className="px-6 py-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                              <h3 className="font-bold text-brand-navy flex items-center gap-3">
-                                 <BookOpen className="w-5 h-5 text-brand-blue" />
-                                 My Current Semester Books (Semester {studentData.semester})
-                              </h3>
-                           </div>
-                           <div className="p-0 overflow-x-auto scrollbar-thin">
-                              <table className="w-full text-left border-collapse min-w-[700px]">
-                                 <thead>
-                                    <tr className="border-b border-slate-100">
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">ISBN</th>
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Book Title</th>
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Author</th>
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Availability</th>
-                                    </tr>
-                                 </thead>
-                                 <tbody>
-                                    {currentSemesterBooks.map((book) => (
-                                       <tr key={book.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                                          <td className="py-5 px-6 font-mono text-[10px] text-slate-400">{book.isbn}</td>
-                                          <td className="py-5 px-6">
-                                             <p className="text-sm font-bold text-slate-800 group-hover:text-brand-blue transition-colors">{book.title}</p>
-                                          </td>
-                                          <td className="py-5 px-6 text-xs text-slate-600">{book.author}</td>
-                                          <td className="py-5 px-6 text-right">
-                                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${
-                                                book.status === 'Available' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                                                book.status === 'Issued' ? 'bg-slate-50 text-slate-500 border-slate-200' :
-                                                'bg-amber-50 text-amber-600 border-amber-100'
-                                             }`}>
-                                                {book.status === 'Available' ? 'Available' : book.status === 'Issued' ? 'Currently Issued' : book.status}
-                                             </span>
-                                          </td>
-                                       </tr>
-                                    ))}
-                                 </tbody>
-                              </table>
-                           </div>
-                        </div>
-
-                        {/* My Borrowed Books Section */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-700">
-                           <div className="px-6 py-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                              <h3 className="font-bold text-brand-navy flex items-center gap-3">
-                                 <HistoryIcon className="w-5 h-5 text-brand-blue" />
-                                 My Borrowed Books
-                              </h3>
-                           </div>
-                           <div className="p-0 overflow-x-auto scrollbar-thin">
-                              <table className="w-full text-left border-collapse min-w-[900px]">
-                                 <thead>
-                                    <tr className="border-b border-slate-100 bg-white">
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">ISBN</th>
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Title & Author</th>
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Borrowed Date</th>
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Due Date</th>
-                                       <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Status</th>
-                                    </tr>
-                                 </thead>
-                                 <tbody>
-                                    {myBorrowedBooks.map((book) => (
-                                       <tr key={book.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                                          <td className="py-5 px-6 font-mono text-[11px] text-slate-400">{book.isbn}</td>
-                                          <td className="py-5 px-6">
-                                             <p className="text-sm font-bold text-slate-800 group-hover:text-brand-blue transition-colors">{book.title}</p>
-                                             <p className="text-[11px] text-slate-500 mt-0.5">by {book.author}</p>
-                                          </td>
-                                          <td className="py-5 px-6 text-center text-xs text-slate-600 font-medium">{book.issueDate}</td>
-                                          <td className="py-5 px-6 text-center text-xs text-slate-600 font-bold">{book.dueDate}</td>
-                                          <td className="py-5 px-6 text-right">
-                                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${
-                                                book.status === 'Borrowed' ? 'bg-blue-50 text-brand-blue border-blue-100' : 
-                                                book.status === 'Overdue' ? 'bg-red-50 text-red-600 border-red-100' : 
-                                                'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                             }`}>
-                                                {book.status}
-                                             </span>
-                                          </td>
-                                       </tr>
-                                    ))}
-                                 </tbody>
-                              </table>
-                           </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-brand-blue tracking-[0.3em] uppercase mb-1">Student Session</p>
+                          <h2 className="text-2xl lg:text-3xl font-black text-brand-navy leading-none mb-2">{studentData.name}</h2>
+                          <div className="flex flex-wrap gap-3">
+                            <span className="text-[10px] bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-black uppercase tracking-widest">{studentData.regNo}</span>
+                            <span className="text-[10px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-black uppercase tracking-widest">Sem {studentData.semester}</span>
+                          </div>
                         </div>
                       </div>
-                    ) : (
-                      /* Semester-wise Catalog / Reservation View */
-                      <div className="space-y-8 animate-in slide-in-from-right-4 duration-500 relative">
-                        {/* Confirmation Modal */}
-                        {modalData.isOpen && (
-                          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                            <div className="absolute inset-0 bg-brand-navy/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setModalData({ ...modalData, isOpen: false })}></div>
-                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden animate-in zoom-in-95 duration-300">
-                               <div className="bg-brand-navy p-6 text-center text-white">
-                                  <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white/20">
-                                     <Check className="w-8 h-8" />
+                      <div className="flex items-center gap-3 w-full md:w-auto">
+                        <button onClick={() => setIsLogoutModalOpen(true)} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-white text-red-500 rounded-2xl hover:bg-red-50 hover:text-red-600 transition-all border-2 border-red-100 min-h-[52px] font-black text-[10px] uppercase tracking-widest">
+                          <LogOut className="w-5 h-5" />
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                    <section className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                      <div className="flex items-center justify-between px-1">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 bg-brand-navy rounded-2xl text-white shadow-lg">
+                            <NotebookTabs className="w-6 h-6" />
+                          </div>
+                          <h2 className="text-2xl lg:text-3xl font-black text-brand-navy tracking-tight">My Semester Library Record</h2>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        {semesterRecords.map((record) => (
+                          <div key={record.semester} className={`bg-white border-2 rounded-[2rem] overflow-hidden transition-all duration-300 ${expandedSemesters.includes(record.semester) ? 'border-brand-blue/30 shadow-xl' : 'border-slate-100 shadow-sm hover:border-slate-200'}`}>
+                            <div className="p-6 lg:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 cursor-pointer" onClick={() => toggleSemester(record.semester)}>
+                              <div className="flex items-center gap-6">
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-colors ${record.hasDues ? 'bg-red-50 border-red-100 text-red-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                                  <span className="text-xl font-black">{record.semester === 5 ? 'V' : record.semester === 4 ? 'IV' : 'III'}</span>
+                                </div>
+                                <div>
+                                  <h3 className="text-xl font-black text-brand-navy">{record.label}</h3>
+                                  <div className="flex items-center gap-4 mt-1">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><BookOpen className="w-3 h-3" /> {record.borrowedCount} Borrowed</span>
+                                    {record.overdueCount > 0 && <span className="text-[10px] font-black text-red-600 uppercase tracking-widest flex items-center gap-1.5"><AlertTriangle className="w-3 h-3" /> {record.overdueCount} Overdue</span>}
                                   </div>
-                                  <h3 className="text-xl font-bold tracking-tight">Success!</h3>
-                                  <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mt-1">Book successfully {modalData.action === 'Reserved' ? 'reserved' : 'checked out'}</p>
-                               </div>
-                               <div className="p-8 space-y-6">
-                                  <div className="space-y-4">
-                                     <div className="flex justify-between items-start gap-4">
-                                        <div className="min-w-0">
-                                           <h4 className="text-sm font-black text-slate-800 line-clamp-2">{modalData.book?.title}</h4>
-                                           <p className="text-xs text-slate-500 mt-1">by {modalData.book?.author}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 w-full sm:w-auto">
+                                {record.hasDues && (
+                                  <button onClick={(e) => { e.stopPropagation(); handleOpenPayment(record.semester); }} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-600 transition-all shadow-lg shadow-amber-200">
+                                    <Wallet className="w-4 h-4" /> Pay Dues
+                                  </button>
+                                )}
+                                <button className="p-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-all">
+                                  <ChevronRight className={`w-5 h-5 transition-transform ${expandedSemesters.includes(record.semester) ? 'rotate-90' : ''}`} />
+                                </button>
+                              </div>
+                            </div>
+                            {expandedSemesters.includes(record.semester) && (
+                              <div className="px-6 lg:px-8 pb-8 animate-in slide-in-from-top-4 duration-300">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-slate-50">
+                                  {pastHistory.filter(h => h.semester === record.semester).map((book) => {
+                                    const status = calculateDueStatus(book.borrowedDate, book.returnedDate);
+                                    return (
+                                      <div key={book.id} className={`bg-slate-50/50 border-2 rounded-3xl p-5 transition-all ${status.border}`}>
+                                        <div className="flex justify-between items-start mb-4">
+                                          <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${status.bg} ${status.color}`}><status.icon className="w-3 h-3" />{status.label}</div>
+                                          <span className="text-[10px] font-mono text-slate-400">#{book.isbn.slice(-4)}</span>
                                         </div>
-                                        <div className="text-right shrink-0">
-                                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ISBN</p>
-                                           <p className="text-[11px] font-mono font-bold text-slate-800">{modalData.book?.isbn}</p>
-                                        </div>
-                                     </div>
-                                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                                        <div className="flex justify-between items-center">
-                                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Reserved By</span>
-                                           <span className="text-xs font-bold text-slate-700">{studentData.name}</span>
-                                        </div>
-                                        {modalData.dueDate && (
-                                          <div className="flex justify-between items-center">
-                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Due Date</span>
-                                             <span className="text-xs font-black text-brand-blue">{modalData.dueDate}</span>
+                                        <h4 className="font-black text-brand-navy text-sm line-clamp-1 mb-1">{book.title}</h4>
+                                        <p className="text-[11px] text-slate-500 mb-4 italic">by {book.author}</p>
+                                        {status.status === 'Overdue' && (
+                                          <div className="bg-white p-3 rounded-2xl border border-red-100 text-center">
+                                            <p className="text-[10px] font-black text-red-600 uppercase mb-1">{status.days} Days Overdue</p>
+                                            <p className="text-[9px] text-slate-500 leading-tight">Return book immediately to avoid penalty.</p>
                                           </div>
                                         )}
-                                     </div>
+                                      </div>
+                                    );
+                                  })}
+                                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/30 group hover:border-brand-blue/30 transition-all cursor-pointer" onClick={() => setActiveTab('resources')}>
+                                    <Eye className="w-8 h-8 text-slate-300 mb-3 group-hover:text-brand-blue transition-colors" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-brand-blue">View Catalog</span>
                                   </div>
-                                  <button 
-                                     onClick={() => setModalData({ ...modalData, isOpen: false })}
-                                     className="w-full py-4 bg-brand-navy hover:bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-[0.98]"
-                                  >
-                                     OK
-                                  </button>
-                               </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                           <button 
-                              onClick={() => setPortalSubView('dashboard')}
-                              className="flex items-center gap-2 text-slate-500 hover:text-brand-navy font-bold text-xs uppercase tracking-widest group"
-                           >
-                              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                              Back to Dashboard
-                           </button>
-                           <div className="bg-brand-blue/10 px-4 py-2 rounded-xl text-brand-blue text-[10px] font-bold uppercase tracking-widest">
-                             My Branch: {studentData.branch} | My Sem: {studentData.semester}
-                           </div>
-                        </div>
-
-                        <div className="bg-white rounded-2xl p-6 lg:p-8 border border-slate-200 shadow-sm relative">
-                           {/* SEARCH BAR - STICKY UI */}
-                           <div className="sticky top-0 z-20 bg-white pt-2 pb-6 mb-2 border-b border-slate-100">
-                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                 <div>
-                                    <h1 className="text-2xl lg:text-3xl font-bold text-brand-navy tracking-tight">Library Catalog</h1>
-                                    <p className="text-xs text-slate-500 mt-1">Browse and reserve textbooks for your academic track.</p>
-                                 </div>
-                                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                                    <div className="relative flex-1 sm:min-w-[300px]">
-                                       <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                       <input 
-                                          type="text" 
-                                          value={searchQuery}
-                                          onChange={(e) => setSearchQuery(e.target.value)}
-                                          placeholder="Search by Title, Author, ISBN or Category..."
-                                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-sm"
-                                       />
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-200">
-                                       <Filter className="w-4 h-4 text-slate-400 ml-2" />
-                                       <select 
-                                          value={filterBranch}
-                                          onChange={(e) => setFilterBranch(e.target.value)}
-                                          className="bg-transparent px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-600 focus:outline-none"
-                                       >
-                                          <option value="all">All Departments</option>
-                                          <option value="CS">Computer Science</option>
-                                          <option value="IT">Information Tech</option>
-                                          <option value="ECE">Electronics</option>
-                                          <option value="Mechanical">Mechanical</option>
-                                          <option value="Civil">Civil</option>
-                                       </select>
-                                    </div>
-                                 </div>
+                                </div>
                               </div>
-                           </div>
-
-                           {/* Semester Tabs */}
-                           <div className="flex flex-wrap gap-2 mb-10 pb-4">
-                              {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                                <button
-                                  key={sem}
-                                  onClick={() => setActiveSemesterTab(sem)}
-                                  className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    activeSemesterTab === sem 
-                                      ? 'bg-brand-navy text-white shadow-xl scale-105' 
-                                      : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
-                                  } ${sem === studentData.semester ? 'ring-2 ring-brand-blue ring-offset-4 ring-offset-white' : ''}`}
-                                >
-                                  Semester {sem} {sem === studentData.semester ? '(Current)' : ''}
-                                </button>
-                              ))}
-                           </div>
-
-                           <div className="mb-8 flex items-center gap-4">
-                              <span className="h-0.5 bg-slate-100 flex-1"></span>
-                              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] px-2 text-center">
-                                Semester {activeSemesterTab} – Prescribed Books
-                              </h3>
-                              <span className="h-0.5 bg-slate-100 flex-1"></span>
-                           </div>
-
-                           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                              {filteredReservationBooks.length === 0 ? (
-                                 <div className="col-span-full py-24 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                                       <Search className="w-8 h-8 text-slate-300" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-800">No results found</h3>
-                                    <p className="text-slate-400 text-sm mt-2 max-w-xs mx-auto font-medium">Try adjusting your keywords or department filters to discover resources.</p>
-                                 </div>
-                              ) : (
-                                 filteredReservationBooks.map((book) => (
-                                    <div key={book.id} className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col hover:border-brand-blue/40 hover:shadow-2xl transition-all duration-500 group relative overflow-hidden">
-                                       <div className="absolute top-0 right-0 w-24 h-24 bg-brand-navy/5 -mr-8 -mt-8 rounded-full blur-2xl group-hover:bg-brand-blue/10 transition-colors"></div>
-                                       
-                                       <div className="flex justify-between items-start mb-6 relative z-10">
-                                          <div className="flex gap-2">
-                                             <span className="px-3 py-1 rounded-xl bg-blue-50 text-brand-blue text-[9px] font-black uppercase tracking-widest border border-blue-100">{book.branch}</span>
-                                          </div>
-                                          <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-colors ${
-                                             book.status === 'Available' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                                             book.status === 'Issued' ? 'bg-slate-100 text-slate-500 border-slate-200' :
-                                             'bg-amber-50 text-amber-600 border-amber-100'
-                                          }`}>
-                                             {book.status === 'Issued' ? 'Currently Issued' : book.status}
-                                          </span>
-                                       </div>
-                                       
-                                       <div className="flex-1 relative z-10">
-                                          <h4 className="text-lg font-black text-slate-800 mb-2 group-hover:text-brand-blue transition-colors line-clamp-2 leading-tight">{book.title}</h4>
-                                          <div className="flex items-center gap-2 mb-2">
-                                             <User className="w-3.5 h-3.5 text-slate-400" />
-                                             <p className="text-xs text-slate-600 font-bold">{book.author}</p>
-                                          </div>
-                                          <div className="flex items-center gap-2 mb-4">
-                                             <ClipboardList className="w-3.5 h-3.5 text-slate-400" />
-                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{book.subject}</p>
-                                          </div>
-                                          <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-100 mb-2">
-                                             <p className="text-[10px] text-slate-400 font-mono uppercase tracking-tighter">ISBN Reference</p>
-                                             <p className="text-xs font-mono font-bold text-slate-800 mt-0.5">{book.isbn}</p>
-                                          </div>
-                                       </div>
-
-                                       <div className="space-y-3 mt-6 relative z-10">
-                                          {book.status === 'Available' ? (
-                                             <div className="grid grid-cols-1 gap-2.5">
-                                                <button 
-                                                   onClick={() => handleBorrowAction(book.id, 'Reserve')}
-                                                   className="w-full py-3.5 bg-brand-navy text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-blue transition-all shadow-lg active:scale-95"
-                                                >
-                                                   Reserve Now
-                                                </button>
-                                                <button 
-                                                   onClick={() => handleBorrowAction(book.id, 'Checkout')}
-                                                   className="w-full py-3.5 bg-white border-2 border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:border-brand-blue/40 transition-all active:scale-95"
-                                                >
-                                                   Check Out
-                                                </button>
-                                             </div>
-                                          ) : (
-                                             <button 
-                                                disabled
-                                                className="w-full py-4 bg-slate-100 border border-slate-200 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest cursor-not-allowed opacity-70"
-                                             >
-                                                {book.status === 'Issued' ? 'Currently Issued' : 'Reserved'}
-                                             </button>
-                                          )}
-                                       </div>
-                                    </div>
-                                 ))
-                              )}
-                           </div>
-                        </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    )}
+                    </section>
                   </div>
                 )}
               </div>
             )}
 
-            {activeTab === 'dashboard' && (
-              <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-500">
-                <div className="bg-white rounded-2xl p-6 lg:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-[10px] font-bold text-brand-blue tracking-widest uppercase mb-1 lg:mb-2">Library Intelligence</h2>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-brand-navy">Academic Dashboard</h1>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-xl text-brand-blue self-start md:self-center">
-                    <BarChart3 className="w-4 h-4 lg:w-5 lg:h-5" />
-                    <span className="text-[10px] lg:text-sm font-bold uppercase tracking-wide">Live Data Sync</span>
+            {activeTab === 'resources' && (
+              <div className="space-y-12 animate-in fade-in duration-700">
+                <div className="bg-white rounded-[2.5rem] p-10 lg:p-14 border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none"><Laptop className="w-48 h-48" /></div>
+                  <div className="relative z-10 max-w-4xl">
+                    <h2 className="text-brand-blue font-black text-[10px] lg:text-xs tracking-[0.4em] uppercase mb-4">Knowledge Vault</h2>
+                    <h1 className="text-4xl lg:text-6xl font-black text-brand-navy tracking-tight mb-6 uppercase">Digital Resources</h1>
+                    <p className="text-slate-600 text-lg lg:text-xl font-medium leading-relaxed">Curated open-access journals, e-libraries, e-books, and learning platforms for academic excellence.</p>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-                  {stats.map((stat, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`${stat.color} p-5 lg:p-6 rounded-2xl shadow-sm border ${stat.color === 'bg-white' ? 'border-slate-200' : 'border-transparent'} transition-all hover:scale-[1.01] duration-300`}
-                    >
-                      <div className="flex justify-between items-start mb-3 lg:mb-4">
-                        <div className={`p-2.5 rounded-xl ${stat.color === 'bg-brand-navy' ? 'bg-white/10' : 'bg-brand-navy/5'}`}>
-                          <stat.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${stat.color === 'bg-brand-navy' ? 'text-brand-blue' : 'text-brand-navy'}`} />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <p className={`text-3xl lg:text-4xl font-extrabold font-mono tracking-tight ${stat.text}`}>{stat.value}</p>
-                        <h3 className={`text-[10px] lg:text-sm font-bold uppercase tracking-wide ${stat.text}`}>{stat.title}</h3>
-                        <p className={`text-[10px] leading-relaxed mt-1.5 ${stat.subText}`}>{stat.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'gallery' && (
-              <div className="bg-white rounded-2xl p-8 lg:p-12 text-center border border-slate-200 min-h-[400px] flex flex-col items-center justify-center animate-in fade-in duration-500">
-                 <Images className="w-12 h-12 lg:w-16 lg:h-16 text-slate-200 mb-4" />
-                 <h2 className="text-xl lg:text-2xl font-bold text-brand-navy uppercase tracking-wide">Library Gallery</h2>
-                 <p className="text-xs lg:text-sm text-slate-500 mt-2 max-w-sm">Photography coming soon.</p>
-              </div>
-            )}
-
-            {activeTab === 'study-rooms' && (
-              <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-500">
-                 <div className="bg-white rounded-2xl p-6 lg:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <section className="space-y-8">
+                  <div className="flex items-center gap-4 px-1">
+                    <div className="p-3 bg-brand-navy rounded-2xl text-white shadow-lg"><Database className="w-6 h-6" /></div>
                     <div>
-                      <h2 className="text-[10px] font-bold text-brand-blue tracking-widest uppercase mb-1">Academic Environment</h2>
-                      <h1 className="text-2xl lg:text-4xl font-extrabold text-brand-navy tracking-tight">Study Rooms</h1>
+                      <h2 className="text-2xl lg:text-3xl font-black text-brand-navy tracking-tight uppercase">Open Access E-Journals</h2>
+                      <p className="text-slate-500 text-sm font-medium">Globally recognized scholarly journal publishers and directories.</p>
                     </div>
-                    <button className="px-6 py-2.5 lg:px-8 lg:py-3 bg-brand-navy text-white rounded-xl font-bold hover:bg-brand-blue transition-all shadow-lg hover:shadow-brand-blue/20 text-xs lg:text-sm min-h-[44px]">
-                      Reserve a Slot
-                    </button>
-                 </div>
-
-                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="flex flex-col lg:flex-row">
-                       <div className="p-6 lg:p-10 lg:w-3/5 flex flex-col justify-center">
-                          <h3 className="text-xl lg:text-2xl font-bold text-brand-navy mb-4 lg:mb-6">Environment for Excellence</h3>
-                          <div className="space-y-3 lg:space-y-4 text-slate-600 leading-relaxed font-medium text-xs lg:text-sm">
-                             <p>Our study rooms provide a quiet, focused, and technology-enabled environment designed to support collaborative academic work.</p>
-                          </div>
-                       </div>
-                       <div className="lg:w-2/5 p-4 lg:p-8 pt-0 lg:pt-8">
-                          <img 
-                            src="https://www.jeppiaarinstitute.org/wp-content/uploads/2024/05/lib1.jpeg" 
-                            alt="JIT Library Study Space" 
-                            className="w-full h-48 lg:h-full object-cover rounded-2xl shadow-lg"
-                          />
-                       </div>
+                  </div>
+                  <div className="hidden md:block bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-20">S.No</th>
+                          <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Name of Provider</th>
+                          <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Access Link</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {DIGITAL_RESOURCES.filter(r => r.category === 'E-Journal').map((journal, idx) => (
+                          <tr key={journal.id} className="hover:bg-blue-50/30 transition-colors group">
+                            <td className="px-8 py-5 text-sm font-mono text-slate-400">{idx + 1}</td>
+                            <td className="px-8 py-5 text-sm font-bold text-slate-800 group-hover:text-brand-blue transition-colors">{journal.name}</td>
+                            <td className="px-8 py-5 text-right">
+                              <a href={journal.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-navy hover:text-white transition-all group/btn">
+                                <span>Connect</span>
+                                <ExternalLink className="w-3 h-3 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                              </a>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="md:hidden space-y-4">
+                    {DIGITAL_RESOURCES.filter(r => r.category === 'E-Journal').map((journal, idx) => (
+                      <div key={journal.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <div className="flex justify-between items-start mb-4"><span className="text-[10px] font-mono text-slate-400">Journal #{idx + 1}</span></div>
+                        <h4 className="font-black text-brand-navy text-lg mb-6 leading-tight">{journal.name}</h4>
+                        <a href={journal.url} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-3 py-4 bg-brand-navy text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all">Visit Provider<ExternalLink className="w-4 h-4" /></a>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+                <section className="space-y-8">
+                  <div className="flex items-center gap-4 px-1">
+                    <div className="p-3 bg-brand-navy rounded-2xl text-white shadow-lg"><Library className="w-6 h-6" /></div>
+                    <div>
+                      <h2 className="text-2xl lg:text-3xl font-black text-brand-navy tracking-tight uppercase">E-Library Resources</h2>
+                      <p className="text-slate-500 text-sm font-medium">Institutional subscriptions and national digital learning hubs.</p>
                     </div>
-                 </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {DIGITAL_RESOURCES.filter(r => r.category === 'E-Library').map((lib) => (
+                      <a key={lib.id} href={lib.url} target="_blank" rel="noopener noreferrer" className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:border-brand-blue/30 hover:shadow-xl transition-all group relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 group-hover:opacity-10 transition-all"><Globe className="w-20 h-20" /></div>
+                        <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-brand-blue mb-6 group-hover:bg-brand-navy group-hover:text-white transition-all"><Monitor className="w-6 h-6" /></div>
+                        <h3 className="font-black text-brand-navy text-xl mb-2 group-hover:text-brand-blue transition-colors uppercase tracking-tight">{lib.name}</h3>
+                        <p className="text-slate-500 text-xs font-medium mb-8 leading-relaxed italic">Access authorized scholarly materials via institutional SSO or local network.</p>
+                        <div className="flex items-center gap-2 text-[10px] font-black text-brand-blue uppercase tracking-widest group-hover:translate-x-1 transition-transform"><span>Open Repository</span><ChevronRight className="w-3 h-3" /></div>
+                      </a>
+                    ))}
+                  </div>
+                </section>
               </div>
             )}
 
+            {/* ENHANCED HELP DESK TAB */}
             {activeTab === 'help-desk' && (
-              <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-500">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                  <div className="bg-brand-navy p-6 lg:p-10 text-white relative">
-                    <ShieldCheck className="w-6 h-6 text-emerald-400 mb-2" />
-                    <h1 className="text-2xl lg:text-3xl font-bold">Library Help Desk</h1>
-                    <p className="text-blue-100 text-xs lg:text-sm mt-2">Support for research, resources, or technical access.</p>
+              <div className="space-y-12 animate-in fade-in duration-700">
+                {/* Help Desk Header */}
+                <div className="bg-white rounded-[2.5rem] p-10 lg:p-14 border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
+                    <HelpCircle className="w-48 h-48 text-brand-navy" />
                   </div>
-                  
-                  <div className="p-5 lg:p-8">
-                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-10">
-                        <div className="flex flex-col h-full min-h-[450px]">
-                           <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-base lg:text-lg font-bold text-brand-navy flex items-center gap-2">
-                                 <MessageSquare className="w-4 h-4 lg:w-5 lg:h-5 text-brand-blue" />
-                                 Chat with Librarian
-                              </h3>
-                           </div>
-                           
-                           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex-grow flex flex-col justify-end max-h-[400px]">
-                              {requests.length === 0 ? (
-                                 <div className="text-center py-12 opacity-40">
-                                    <MessageSquare className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-3" />
-                                    <p className="text-xs lg:text-sm">Start a conversation about your library query.</p>
-                                 </div>
-                              ) : (
-                                 <div className="space-y-3 overflow-y-auto pr-2 scrollbar-thin">
-                                    {requests.map(req => (
-                                       <div key={req.id}>
-                                          <div className="flex justify-end">
-                                             <div className="bg-brand-navy text-white text-[11px] lg:text-xs p-3 rounded-2xl rounded-br-none max-w-[85%] shadow-sm">
-                                                {req.message}
-                                             </div>
-                                          </div>
-                                       </div>
-                                    ))}
-                                 </div>
-                              )}
-                           </div>
-
-                           <div className="mt-4 relative">
-                              <input 
-                                 type="text" 
-                                 value={chatInput}
-                                 onChange={(e) => setChatInput(e.target.value)}
-                                 onKeyDown={(e) => e.key === 'Enter' && handleSendRequest()}
-                                 placeholder="Ask about books..." 
-                                 className="w-full bg-white border border-slate-200 rounded-xl py-4 pl-4 pr-14 text-xs focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-inner"
-                              />
-                              <button 
-                                 onClick={handleSendRequest}
-                                 disabled={!chatInput.trim()}
-                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-brand-navy text-white rounded-lg hover:bg-brand-blue"
-                              >
-                                 <Send className="w-4 h-4" />
-                              </button>
-                           </div>
-                        </div>
-                     </div>
+                  <div className="relative z-10 max-w-4xl">
+                    <h2 className="text-brand-blue font-black text-[10px] lg:text-xs tracking-[0.4em] uppercase mb-4">Support Hub</h2>
+                    <h1 className="text-4xl lg:text-6xl font-black text-brand-navy tracking-tight mb-6 uppercase">Library Help Desk</h1>
+                    <p className="text-slate-600 text-lg lg:text-xl font-medium leading-relaxed">
+                      Get instant assistance for library services, resources, and support.
+                    </p>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+                  {/* Section 1: AI Assistant Chat Panel */}
+                  <div className="xl:col-span-8">
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden flex flex-col h-[650px]">
+                      {/* Chat Header */}
+                      <div className="bg-brand-navy p-6 flex items-center justify-between text-white">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                            <Bot className="w-7 h-7 text-brand-blue" />
+                          </div>
+                          <div>
+                            <h3 className="font-black uppercase tracking-tight text-lg">Library AI Assistant</h3>
+                            <div className="flex items-center gap-1.5 opacity-70">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest">Active Support</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                          <ShieldCheck className="w-4 h-4 text-brand-blue" />
+                          <span className="text-[9px] font-black uppercase tracking-widest">JIT Knowledge Base v2.5</span>
+                        </div>
+                      </div>
+
+                      {/* Chat Messages Area */}
+                      <div className="flex-1 overflow-y-auto p-6 lg:p-10 space-y-6 bg-slate-50/50">
+                        {hdMessages.map((msg, idx) => (
+                          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
+                            <div className={`relative max-w-[85%] lg:max-w-[75%] p-5 rounded-[1.8rem] text-sm lg:text-base ${
+                              msg.role === 'user' 
+                                ? 'bg-brand-blue text-white rounded-br-none shadow-lg shadow-blue-500/10' 
+                                : 'bg-white text-slate-700 rounded-bl-none border border-slate-200 shadow-sm'
+                            }`}>
+                              <p className="leading-relaxed font-medium">{msg.text}</p>
+                              <div className={`mt-2 text-[9px] font-black uppercase tracking-widest opacity-40 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {isHdLoading && (
+                          <div className="flex justify-start">
+                            <div className="bg-white p-5 rounded-[1.8rem] rounded-bl-none border border-slate-200 shadow-sm flex items-center gap-4">
+                              <Loader2 className="w-5 h-5 text-brand-blue animate-spin" />
+                              <span className="text-xs lg:text-sm font-bold text-slate-400 uppercase tracking-widest">Assistant is typing...</span>
+                            </div>
+                          </div>
+                        )}
+                        <div ref={chatEndRef} />
+                      </div>
+
+                      {/* Chat Footer with Actions & Input */}
+                      <div className="p-6 lg:p-8 bg-white border-t border-slate-100 space-y-6">
+                        {/* Section 2: Smart Quick Action Buttons */}
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { label: "Check Book Availability", prompt: "How can I check if a book is available in the library?" },
+                            { label: "View Due Date", prompt: "Where can I find my borrowed books' due dates?" },
+                            { label: "Digital Resources Help", prompt: "How do I access digital resources and e-journals?" },
+                            { label: "Study Room Booking", prompt: "What are the rules for booking library study rooms?" },
+                            { label: "Pay Library Fine", prompt: "How can I pay my library fines online?" }
+                          ].map((action, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleHdSend(action.prompt)}
+                              className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-brand-navy uppercase tracking-widest hover:border-brand-blue hover:text-brand-blue transition-all active:scale-95 shadow-sm"
+                            >
+                              📚 {action.label}
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => setShowEscalationForm(true)}
+                            className="px-4 py-2.5 bg-red-50 border border-red-100 rounded-xl text-[10px] font-black text-red-600 uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all active:scale-95 shadow-sm"
+                          >
+                            📞 Contact Librarian
+                          </button>
+                        </div>
+
+                        {/* Input Area */}
+                        <div className="relative">
+                          <input 
+                            type="text" 
+                            value={hdInput}
+                            onChange={(e) => setHdInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleHdSend()}
+                            placeholder="Ask about library rules, books, or services..." 
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-5 pl-6 pr-16 text-sm lg:text-base focus:outline-none focus:border-brand-blue focus:bg-white transition-all font-medium" 
+                          />
+                          <button 
+                            onClick={() => handleHdSend()}
+                            disabled={!hdInput.trim() || isHdLoading}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-brand-navy text-white rounded-xl hover:bg-brand-blue active:scale-90 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-xl shadow-navy-500/20"
+                          >
+                            <Send className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Escalate to Librarian / Contact Sidebar */}
+                  <div className="xl:col-span-4 space-y-8">
+                    {/* Escalation Form Card */}
+                    {showEscalationForm ? (
+                      <div className="bg-white rounded-[2.5rem] p-8 lg:p-10 border-2 border-brand-blue/20 shadow-xl animate-in zoom-in-95 duration-300 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -mr-16 -mt-16 pointer-events-none"></div>
+                        <div className="flex items-center justify-between mb-8">
+                           <h3 className="text-xl font-black text-brand-navy uppercase tracking-tight">Direct Escalation</h3>
+                           <button onClick={() => setShowEscalationForm(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-all"><X className="w-5 h-5 text-slate-400" /></button>
+                        </div>
+                        
+                        {escalationStatus === 'success' ? (
+                          <div className="py-12 text-center animate-in fade-in zoom-in-95">
+                             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                                <CheckCircle2 className="w-10 h-10" />
+                             </div>
+                             <h4 className="text-2xl font-black text-brand-navy uppercase mb-2">Request Sent</h4>
+                             <p className="text-slate-500 text-sm font-medium leading-relaxed">Your request has been sent to the librarian. Expect a response via email shortly.</p>
+                          </div>
+                        ) : (
+                          <form onSubmit={handleEscalationSubmit} className="space-y-5">
+                             <div className="space-y-4">
+                                <div>
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Full Name</label>
+                                   <input 
+                                    type="text" 
+                                    defaultValue={isAuthenticated ? studentData.name : ''} 
+                                    placeholder="Enter your name" 
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-medium" 
+                                    required 
+                                   />
+                                </div>
+                                <div>
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Register Number</label>
+                                   <input 
+                                    type="text" 
+                                    defaultValue={isAuthenticated ? studentData.regNo : ''} 
+                                    placeholder="e.g. 2026" 
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-medium" 
+                                    required 
+                                   />
+                                </div>
+                                <div>
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Institutional Email</label>
+                                   <input 
+                                    type="email" 
+                                    defaultValue={isAuthenticated ? studentData.email : ''} 
+                                    placeholder="username@jit.edu" 
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-medium" 
+                                    required 
+                                   />
+                                </div>
+                                <div>
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Query Description</label>
+                                   <textarea 
+                                    placeholder="Describe your specific problem or request..." 
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-medium h-32 resize-none" 
+                                    required 
+                                   />
+                                </div>
+                             </div>
+                             <button 
+                                type="submit" 
+                                disabled={escalationStatus === 'submitting'}
+                                className="w-full py-4 bg-brand-navy text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-brand-blue transition-all shadow-xl disabled:opacity-50"
+                             >
+                                {escalationStatus === 'submitting' ? 'Submitting...' : 'Submit to Librarian'}
+                             </button>
+                          </form>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="bg-brand-navy text-white rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500"></div>
+                        <h3 className="font-black text-2xl mb-4 uppercase tracking-tight">Need More help?</h3>
+                        <p className="text-blue-100 text-sm mb-10 leading-relaxed font-medium opacity-90 italic">If the AI Assistant cannot resolve your query, our library staff is available for specialized consultation.</p>
+                        
+                        <div className="space-y-6">
+                          <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <Phone className="w-5 h-5 text-brand-blue" />
+                            <div>
+                              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">In-Charge Phone</p>
+                              <span className="text-lg font-mono font-black">+91 74012 22005</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <Mail className="w-5 h-5 text-brand-blue" />
+                            <div>
+                              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Office Email</p>
+                              <span className="text-sm font-bold">library@jeppiaarinstitute.org</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => setShowEscalationForm(true)}
+                          className="w-full mt-10 py-5 bg-white text-brand-navy rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand-blue hover:text-white transition-all shadow-xl"
+                        >
+                          Fill Support Form
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Common FAQs Section */}
+                    <div className="bg-white rounded-[2.5rem] p-8 lg:p-10 border border-slate-200 shadow-sm">
+                       <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest mb-6 border-l-4 border-brand-blue pl-4">Standard FAQs</h3>
+                       <div className="space-y-3">
+                        {[
+                          "How many books can a student borrow?",
+                          "What is the fine for late returns?",
+                          "How to renew books online?",
+                          "Is remote access available for IEEE?"
+                        ].map((q, idx) => (
+                          <button 
+                            key={idx} 
+                            onClick={() => handleHdSend(q)}
+                            className="w-full text-left p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center group hover:bg-white hover:border-brand-blue/30 transition-all"
+                          >
+                            <span className="text-xs font-bold text-slate-700">{q}</span>
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 group-hover:text-brand-blue transition-all" />
+                          </button>
+                        ))}
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Placeholder for other tabs */}
+            {activeTab !== 'portal' && activeTab !== 'facilities' && activeTab !== 'resources' && activeTab !== 'help-desk' && (
+              <div className="bg-white rounded-[3rem] p-16 text-center border border-slate-200 shadow-sm relative overflow-hidden">
+                <div className="w-20 h-20 bg-blue-50 text-brand-blue rounded-3xl flex items-center justify-center mx-auto mb-8 border border-blue-100">
+                  {activeTab === 'dashboard' ? <BarChart3 className="w-10 h-10" /> : <HelpCircle className="w-10 h-10" />}
+                </div>
+                <h2 className="text-4xl font-black text-brand-navy uppercase tracking-tight mb-4">{activeTab} Section</h2>
+                <p className="text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed font-medium">This module is currently active. Browse library resources or use the AI assistant for specific queries.</p>
               </div>
             )}
           </div>
         </div>
       </main>
+
+      {/* MODALS */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-brand-navy/80 backdrop-blur-md animate-in fade-in" onClick={() => setIsLogoutModalOpen(false)}></div>
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm relative z-10 p-10 text-center animate-in zoom-in-95 border border-slate-200">
+             <div className="w-20 h-20 bg-red-50 text-red-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <LogOut className="w-10 h-10" />
+             </div>
+             <h3 className="text-2xl font-black text-brand-navy mb-3 uppercase tracking-tight">Logout session?</h3>
+             <p className="text-slate-500 text-sm mb-10 font-medium leading-relaxed">Are you sure you want to log out of your student library account?</p>
+             <div className="flex flex-col gap-4">
+                <button onClick={confirmLogout} className="w-full py-5 bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-red-700 transition-all shadow-xl shadow-red-200 active:scale-95">Yes, Logout</button>
+                <button onClick={() => setIsLogoutModalOpen(false)} className="w-full py-5 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-200 transition-all">Cancel</button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PAYMENT MODAL (UPI + QR) */}
+      {paymentModal.isOpen && (
+        <div className="fixed inset-0 z-[180] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-brand-navy/95 backdrop-blur-md animate-in fade-in" onClick={() => paymentModal.status !== 'processing' && setPaymentModal(prev => ({ ...prev, isOpen: false }))}></div>
+          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-xl relative z-10 overflow-hidden animate-in zoom-in-95">
+             {paymentModal.status === 'success' ? (
+                <div className="p-16 text-center space-y-8">
+                   <div className="w-28 h-28 bg-emerald-100 text-emerald-600 rounded-[2rem] flex items-center justify-center mx-auto animate-bounce shadow-inner">
+                      <CheckCircle2 className="w-14 h-14" />
+                   </div>
+                   <div>
+                      <h3 className="text-4xl font-black text-brand-navy uppercase tracking-tight">Paid Successfully</h3>
+                      <p className="text-slate-500 mt-4 text-lg font-medium">Your payment is being verified by the librarian. The record will clear in 24 hours.</p>
+                   </div>
+                   <button onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false, status: 'idle' }))} className="px-14 py-5 bg-brand-navy text-white rounded-[1.5rem] font-black uppercase tracking-[0.3em] text-xs shadow-2xl hover:bg-brand-blue transition-all">Close Portal</button>
+                </div>
+             ) : (
+                <>
+                   <div className="bg-amber-500 p-10 text-white relative">
+                      <button onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))} className="absolute top-8 right-8 p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-6 h-6" /></button>
+                      <div className="flex items-center gap-5 mb-8">
+                         <div className="w-14 h-14 bg-white/10 rounded-[1.2rem] flex items-center justify-center border border-white/20 shadow-inner"><ReceiptText className="w-7 h-7 text-white" /></div>
+                         <div>
+                            <h3 className="text-2xl font-black uppercase tracking-tight">Settle Library Dues</h3>
+                            <p className="text-amber-100 text-[10px] font-bold tracking-[0.2em] uppercase">Student ID: {studentData.regNo}</p>
+                         </div>
+                      </div>
+                      <div className="space-y-3 max-h-[160px] overflow-y-auto mb-8 pr-3">
+                        {paymentModal.items.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center bg-white/10 p-4 rounded-2xl border border-white/10">
+                            <div className="min-w-0 flex-1 mr-4">
+                              <p className="text-xs font-black uppercase tracking-tight truncate">{item.title}</p>
+                              <p className="text-[10px] text-amber-100 font-bold uppercase">{item.days} Days Overdue</p>
+                            </div>
+                            <span className="font-mono font-black text-lg">₹{item.amount}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-end justify-between border-t border-white/20 pt-8">
+                         <div>
+                            <p className="text-[10px] font-bold text-amber-100 uppercase tracking-[0.3em] mb-2">Grand Total</p>
+                            <p className="text-5xl font-black text-white font-mono tracking-tighter">₹{paymentModal.items.reduce((acc, curr) => acc + curr.amount, 0)}.00</p>
+                         </div>
+                      </div>
+                   </div>
+                   <div className="p-10 space-y-10">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
+                         <div className="text-center space-y-4">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">UPI Payment QR</p>
+                            <div className="p-6 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 aspect-square flex flex-col items-center justify-center gap-4"><QrCode className="w-32 h-32 text-slate-800" /><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">library@jit-upi</span></div>
+                         </div>
+                         <div className="space-y-6">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Quick Checkout</p>
+                            <div className="space-y-4">
+                               <button onClick={handleConfirmPayment} disabled={paymentModal.status === 'processing'} className="w-full flex items-center justify-center gap-4 py-5 bg-brand-navy text-white rounded-[1.5rem] transition-all font-black text-xs uppercase tracking-[0.2em] hover:bg-brand-blue shadow-xl active:scale-95 disabled:opacity-50"><Smartphone className="w-5 h-5" />Confirm Pay</button>
+                               <p className="text-[9px] text-slate-400 text-center font-bold uppercase leading-relaxed tracking-wider">Payments made via UPI reflect instantly. Retain screenshot for reference.</p>
+                            </div>
+                         </div>
+                      </div>
+                      {paymentModal.status === 'processing' && (
+                         <div className="absolute inset-0 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center z-50 space-y-8"><div className="w-24 h-24 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div><h4 className="text-2xl font-black text-brand-navy uppercase tracking-tighter">Verifying Payment</h4></div>
+                      )}
+                   </div>
+                </>
+             )}
+          </div>
+        </div>
+      )}
+
+      {/* STICKY BOTTOM BUTTON FOR MOBILE (Visible if dues exist) */}
+      {isAuthenticated && totalOverdueCount > 0 && (
+        <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-slate-100 lg:hidden z-40 animate-in slide-in-from-bottom-full">
+          <button onClick={() => handleOpenPayment()} className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-lg active:scale-95"><Wallet className="w-5 h-5" />Settle Library Dues (₹{totalOverdueCount * 5})</button>
+        </div>
+      )}
       
       <TransportAssistant />
       <Footer />

@@ -1,27 +1,17 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_INSTRUCTION } from "../constants";
 
-let aiClient: GoogleGenAI | null = null;
-
-const getAiClient = () => {
-  if (!aiClient) {
-    const apiKey = process.env.API_KEY;
-    if (apiKey) {
-      aiClient = new GoogleGenAI({ apiKey });
-    }
-  }
-  return aiClient;
-};
-
+// Following @google/genai guidelines: Initialize the client inside the function 
+// and use the recommended model for text tasks.
 export const sendMessageToGemini = async (message: string, history: { role: string, parts: { text: string }[] }[] = []) => {
-  const client = getAiClient();
-  if (!client) {
-    throw new Error("API Key not found");
-  }
+  // Always initialize GoogleGenAI with a named parameter
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
-    const chat = client.chats.create({
-      model: "gemini-2.5-flash",
+    // Basic Text Tasks should use 'gemini-3-flash-preview'
+    const chat = ai.chats.create({
+      model: 'gemini-3-flash-preview',
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
       },
@@ -32,6 +22,7 @@ export const sendMessageToGemini = async (message: string, history: { role: stri
     });
 
     const result = await chat.sendMessage({ message });
+    // result.text is a property, not a method
     return result.text;
   } catch (error) {
     console.error("Gemini API Error:", error);

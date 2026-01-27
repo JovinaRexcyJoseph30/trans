@@ -40,3 +40,10 @@ export interface StudentProfile {
   regNo: string;
   semester: number;
 }
+
+export interface DigitalResource {
+  id: number;
+  name: string;
+  url: string;
+  category: 'E-Journal' | 'E-Library' | 'E-Book';
+}

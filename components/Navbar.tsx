@@ -64,15 +64,8 @@ const Navbar: React.FC = () => {
       </div>
       
       {/* College Header Section */}
-      <div className="flex flex-col items-center w-full bg-white px-4">
-        <div className="w-full border-b border-gray-100 flex justify-center py-2">
-          <img 
-            src="https://www.jeppiaarinstitute.org/wp-content/uploads/2025/02/aw.jpeg" 
-            alt="Library Portal Header" 
-            className="h-10 lg:h-16 w-auto object-contain"
-          />
-        </div>
-        <div className="py-4 lg:py-6">
+      <div className="flex flex-col items-center w-full bg-white px-4 py-4 lg:py-6">
+        <div className="flex justify-center w-full">
           <img 
             src="https://www.jeppiaarinstitute.org/wp-content/themes/jeppiaarinstitute/images/jplogo.gif" 
             alt="JIT Logo" 

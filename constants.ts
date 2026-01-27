@@ -1,5 +1,5 @@
 
-import { LibraryResource, Announcement, Book } from './types';
+import { LibraryResource, Announcement, Book, DigitalResource } from './types';
 
 export const LIBRARY_RESOURCES: LibraryResource[] = [
   {
@@ -70,6 +70,38 @@ export const SEMESTER_BOOKS: Book[] = [
 
   // Semester 1
   { id: 'b1-1', title: 'Engineering Graphics', author: 'N.D. Bhatt', subject: 'Graphics', isbn: '978-9380358178', semester: 1, branch: 'General', status: 'Available' }
+];
+
+export const DIGITAL_RESOURCES: DigitalResource[] = [
+  // E-Journals
+  { id: 1, name: 'Directory of Open Access Journals', url: 'http://doaj.org', category: 'E-Journal' },
+  { id: 2, name: 'BioMed Central', url: 'http://www.biomedcentral.com/journals', category: 'E-Journal' },
+  { id: 3, name: 'Scientific Research Publishing', url: 'http://www.scirp.org', category: 'E-Journal' },
+  { id: 4, name: 'CORE', url: 'https://www.core.ac.uk/', category: 'E-Journal' },
+  { id: 5, name: 'Trans Stellar Journal Publication & Research Consultancy', url: 'http://www.tiprc.org/', category: 'E-Journal' },
+  { id: 6, name: 'Science Publications', url: 'http://thescipub.com', category: 'E-Journal' },
+  { id: 7, name: 'Research India Publication', url: 'http://www.ripublication.com', category: 'E-Journal' },
+  { id: 8, name: 'IAEME', url: 'http://www.iaeme.com', category: 'E-Journal' },
+  { id: 9, name: 'SSRG', url: 'http://www.internationaljournalssrg.org', category: 'E-Journal' },
+  { id: 10, name: 'Google Scholar', url: 'https://www.scholar.google.com', category: 'E-Journal' },
+  { id: 11, name: 'arXiv', url: 'https://www.arxiv.org', category: 'E-Journal' },
+  { id: 12, name: 'Hindawi', url: 'http://www.hindawi.com', category: 'E-Journal' },
+  { id: 13, name: 'CSC Open-Access Library', url: 'http://www.cscjournals.org', category: 'E-Journal' },
+  { id: 14, name: 'OMICS International', url: 'http://www.omicsonline.org', category: 'E-Journal' },
+  { id: 15, name: 'Indian Academy of Sciences', url: 'http://www.ias.ac.in', category: 'E-Journal' },
+  // E-Libraries
+  { id: 16, name: 'DELNET', url: 'https://delnet.in/', category: 'E-Library' },
+  { id: 17, name: 'J-Gate', url: 'https://jgateplus.com/', category: 'E-Library' },
+  { id: 18, name: 'National Digital Library', url: 'https://ndl.iitkgp.ac.in/', category: 'E-Library' },
+  { id: 19, name: 'World Digital Library', url: 'https://www.wdl.org/', category: 'E-Library' },
+  { id: 20, name: 'Shodhganga', url: 'https://shodhganga.inflibnet.ac.in/', category: 'E-Library' },
+  { id: 21, name: 'ShodhSindhu', url: 'https://ess.inflibnet.ac.in/', category: 'E-Library' },
+  // E-Books
+  { id: 22, name: 'Project Gutenberg', url: 'https://www.gutenberg.org/', category: 'E-Book' },
+  { id: 23, name: 'Open Library', url: 'https://openlibrary.org/', category: 'E-Book' },
+  { id: 24, name: 'Google Books', url: 'https://books.google.com/', category: 'E-Book' },
+  { id: 25, name: 'BookBoon', url: 'https://bookboon.com/', category: 'E-Book' },
+  { id: 26, name: 'Directory of Open Access Books (DOAB)', url: 'https://www.doabooks.org/', category: 'E-Book' }
 ];
 
 export const ANNOUNCEMENTS: Announcement[] = [
