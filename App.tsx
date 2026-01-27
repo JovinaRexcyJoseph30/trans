@@ -193,6 +193,13 @@ const App: React.FC = () => {
     const text = forcedText || hdInput.trim();
     if (!text || isHdLoading) return;
 
+    if (text.toLowerCase().includes("contact librarian") && !isAuthenticated) {
+        setHdMessages(prev => [...prev, { role: 'user', text: text }]);
+        setHdMessages(prev => [...prev, { role: 'model', text: "I'd be happy to help you contact a librarian! However, for security reasons, you must be logged into the Student Portal to use the escalation form. Please login and try again." }]);
+        setHdInput('');
+        return;
+    }
+
     const userMsg = text;
     setHdInput('');
     setHdMessages(prev => [...prev, { role: 'user', text: userMsg }]);
@@ -506,7 +513,7 @@ const App: React.FC = () => {
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
                   {/* Section 1: AI Assistant Chat Panel */}
                   <div className="xl:col-span-8">
-                    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden flex flex-col h-[650px]">
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden flex flex-col h-[650px] relative">
                       {/* Chat Header */}
                       <div className="bg-brand-navy p-6 flex items-center justify-between text-white">
                         <div className="flex items-center gap-4">
@@ -528,15 +535,17 @@ const App: React.FC = () => {
                       </div>
 
                       {/* Chat Messages Area */}
-                      <div className="flex-1 overflow-y-auto p-6 lg:p-10 space-y-6 bg-slate-50/50">
+                      <div className="flex-1 overflow-y-auto p-6 lg:p-10 space-y-6 bg-slate-50/50 scroll-smooth">
                         {hdMessages.map((msg, idx) => (
                           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
                             <div className={`relative max-w-[85%] lg:max-w-[75%] p-5 rounded-[1.8rem] text-sm lg:text-base ${
                               msg.role === 'user' 
                                 ? 'bg-brand-blue text-white rounded-br-none shadow-lg shadow-blue-500/10' 
+                                : msg.isError 
+                                ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-none'
                                 : 'bg-white text-slate-700 rounded-bl-none border border-slate-200 shadow-sm'
                             }`}>
-                              <p className="leading-relaxed font-medium">{msg.text}</p>
+                              <p className="leading-relaxed font-medium whitespace-pre-wrap">{msg.text}</p>
                               <div className={`mt-2 text-[9px] font-black uppercase tracking-widest opacity-40 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                                 {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </div>
@@ -559,11 +568,11 @@ const App: React.FC = () => {
                         {/* Section 2: Smart Quick Action Buttons */}
                         <div className="flex flex-wrap gap-2">
                           {[
-                            { label: "Check Book Availability", prompt: "How can I check if a book is available in the library?" },
-                            { label: "View Due Date", prompt: "Where can I find my borrowed books' due dates?" },
-                            { label: "Digital Resources Help", prompt: "How do I access digital resources and e-journals?" },
-                            { label: "Study Room Booking", prompt: "What are the rules for booking library study rooms?" },
-                            { label: "Pay Library Fine", prompt: "How can I pay my library fines online?" }
+                            { label: "Check Book Availability", prompt: "Check Book Availability: How can I check if a book is available?" },
+                            { label: "View Due Date", prompt: "View Due Date: Where can I see my borrowed books' due dates?" },
+                            { label: "Digital Resources Help", prompt: "Digital Resources: How do I access DOAJ or IEEE journals?" },
+                            { label: "Study Room Booking Info", prompt: "Study Rooms: How can I book a room for group study?" },
+                            { label: "Pay Library Fine", prompt: "Pay Fine: How can I settle my library dues online?" }
                           ].map((action, i) => (
                             <button
                               key={i}
@@ -574,7 +583,10 @@ const App: React.FC = () => {
                             </button>
                           ))}
                           <button
-                            onClick={() => setShowEscalationForm(true)}
+                            onClick={() => {
+                                if(isAuthenticated) setShowEscalationForm(true);
+                                else handleHdSend("Contact Librarian");
+                            }}
                             className="px-4 py-2.5 bg-red-50 border border-red-100 rounded-xl text-[10px] font-black text-red-600 uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all active:scale-95 shadow-sm"
                           >
                             📞 Contact Librarian
@@ -588,7 +600,7 @@ const App: React.FC = () => {
                             value={hdInput}
                             onChange={(e) => setHdInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleHdSend()}
-                            placeholder="Ask about library rules, books, or services..." 
+                            placeholder="Ask about borrowing rules, timings, or navigation..." 
                             className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-5 pl-6 pr-16 text-sm lg:text-base focus:outline-none focus:border-brand-blue focus:bg-white transition-all font-medium" 
                           />
                           <button 
@@ -603,14 +615,14 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Section 3: Escalate to Librarian / Contact Sidebar */}
+                  {/* Sidebar Escalation / FAQs */}
                   <div className="xl:col-span-4 space-y-8">
                     {/* Escalation Form Card */}
                     {showEscalationForm ? (
                       <div className="bg-white rounded-[2.5rem] p-8 lg:p-10 border-2 border-brand-blue/20 shadow-xl animate-in zoom-in-95 duration-300 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -mr-16 -mt-16 pointer-events-none"></div>
                         <div className="flex items-center justify-between mb-8">
-                           <h3 className="text-xl font-black text-brand-navy uppercase tracking-tight">Direct Escalation</h3>
+                           <h3 className="text-xl font-black text-brand-navy uppercase tracking-tight">Escalate to Librarian</h3>
                            <button onClick={() => setShowEscalationForm(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-all"><X className="w-5 h-5 text-slate-400" /></button>
                         </div>
                         
@@ -626,11 +638,10 @@ const App: React.FC = () => {
                           <form onSubmit={handleEscalationSubmit} className="space-y-5">
                              <div className="space-y-4">
                                 <div>
-                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Full Name</label>
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Student Name</label>
                                    <input 
                                     type="text" 
-                                    defaultValue={isAuthenticated ? studentData.name : ''} 
-                                    placeholder="Enter your name" 
+                                    defaultValue={studentData.name} 
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-medium" 
                                     required 
                                    />
@@ -639,18 +650,16 @@ const App: React.FC = () => {
                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Register Number</label>
                                    <input 
                                     type="text" 
-                                    defaultValue={isAuthenticated ? studentData.regNo : ''} 
-                                    placeholder="e.g. 2026" 
+                                    defaultValue={studentData.regNo} 
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-medium" 
                                     required 
                                    />
                                 </div>
                                 <div>
-                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Institutional Email</label>
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Email</label>
                                    <input 
                                     type="email" 
-                                    defaultValue={isAuthenticated ? studentData.email : ''} 
-                                    placeholder="username@jit.edu" 
+                                    defaultValue={studentData.email} 
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-medium" 
                                     required 
                                    />
@@ -658,7 +667,7 @@ const App: React.FC = () => {
                                 <div>
                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Query Description</label>
                                    <textarea 
-                                    placeholder="Describe your specific problem or request..." 
+                                    placeholder="Describe your query in detail..." 
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all font-medium h-32 resize-none" 
                                     required 
                                    />
@@ -669,7 +678,7 @@ const App: React.FC = () => {
                                 disabled={escalationStatus === 'submitting'}
                                 className="w-full py-4 bg-brand-navy text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-brand-blue transition-all shadow-xl disabled:opacity-50"
                              >
-                                {escalationStatus === 'submitting' ? 'Submitting...' : 'Submit to Librarian'}
+                                {escalationStatus === 'submitting' ? 'Sending...' : 'Submit Request'}
                              </button>
                           </form>
                         )}
@@ -677,8 +686,8 @@ const App: React.FC = () => {
                     ) : (
                       <div className="bg-brand-navy text-white rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500"></div>
-                        <h3 className="font-black text-2xl mb-4 uppercase tracking-tight">Need More help?</h3>
-                        <p className="text-blue-100 text-sm mb-10 leading-relaxed font-medium opacity-90 italic">If the AI Assistant cannot resolve your query, our library staff is available for specialized consultation.</p>
+                        <h3 className="font-black text-2xl mb-4 uppercase tracking-tight">Need specialized help?</h3>
+                        <p className="text-blue-100 text-sm mb-10 leading-relaxed font-medium opacity-90 italic">Our dedicated librarians are here to assist with detailed research and administrative library matters.</p>
                         
                         <div className="space-y-6">
                           <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
@@ -691,30 +700,39 @@ const App: React.FC = () => {
                           <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
                             <Mail className="w-5 h-5 text-brand-blue" />
                             <div>
-                              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Office Email</p>
-                              <span className="text-sm font-bold">library@jeppiaarinstitute.org</span>
+                              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Direct Support</p>
+                              <span className="text-sm font-bold">library@jit.edu</span>
                             </div>
                           </div>
                         </div>
 
-                        <button 
-                          onClick={() => setShowEscalationForm(true)}
-                          className="w-full mt-10 py-5 bg-white text-brand-navy rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand-blue hover:text-white transition-all shadow-xl"
-                        >
-                          Fill Support Form
-                        </button>
+                        {isAuthenticated ? (
+                            <button 
+                            onClick={() => setShowEscalationForm(true)}
+                            className="w-full mt-10 py-5 bg-white text-brand-navy rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand-blue hover:text-white transition-all shadow-xl"
+                            >
+                            Fill Support Request
+                            </button>
+                        ) : (
+                            <button 
+                            onClick={() => setActiveTab('portal')}
+                            className="w-full mt-10 py-5 bg-white/10 text-white border border-white/20 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white hover:text-brand-navy transition-all shadow-xl"
+                            >
+                            Login to Escalate
+                            </button>
+                        )}
                       </div>
                     )}
 
-                    {/* Common FAQs Section */}
+                    {/* Quick Access FAQs */}
                     <div className="bg-white rounded-[2.5rem] p-8 lg:p-10 border border-slate-200 shadow-sm">
-                       <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest mb-6 border-l-4 border-brand-blue pl-4">Standard FAQs</h3>
+                       <h3 className="text-lg font-black text-brand-navy uppercase tracking-widest mb-6 border-l-4 border-brand-blue pl-4">Library FAQs</h3>
                        <div className="space-y-3">
                         {[
-                          "How many books can a student borrow?",
-                          "What is the fine for late returns?",
-                          "How to renew books online?",
-                          "Is remote access available for IEEE?"
+                          "What are the library hours?",
+                          "How to pay library fines?",
+                          "Where are the Computer Science books?",
+                          "Can I borrow journals?"
                         ].map((q, idx) => (
                           <button 
                             key={idx} 
@@ -736,7 +754,7 @@ const App: React.FC = () => {
             {activeTab !== 'portal' && activeTab !== 'facilities' && activeTab !== 'resources' && activeTab !== 'help-desk' && (
               <div className="bg-white rounded-[3rem] p-16 text-center border border-slate-200 shadow-sm relative overflow-hidden">
                 <div className="w-20 h-20 bg-blue-50 text-brand-blue rounded-3xl flex items-center justify-center mx-auto mb-8 border border-blue-100">
-                  {activeTab === 'dashboard' ? <BarChart3 className="w-10 h-10" /> : <HelpCircle className="w-10 h-10" />}
+                  {activeTab === 'dashboard' ? <BarChart3 className="w-10 h-10" /> : activeTab === 'study-rooms' ? <Users className="w-10 h-10" /> : <Images className="w-10 h-10" />}
                 </div>
                 <h2 className="text-4xl font-black text-brand-navy uppercase tracking-tight mb-4">{activeTab} Section</h2>
                 <p className="text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed font-medium">This module is currently active. Browse library resources or use the AI assistant for specific queries.</p>
