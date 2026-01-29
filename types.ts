@@ -11,15 +11,19 @@ export interface LibraryResource {
   status: 'Available' | 'Limited' | 'Processing';
 }
 
+export type BookFormat = 'Physical' | 'E-Book' | 'Both';
+
 export interface Book {
   id: string;
   title: string;
   author: string;
   subject: string;
   isbn: string;
-  semester: number;
+  semester: number | 'Reference' | 'Journal';
   branch: 'CS' | 'IT' | 'ECE' | 'Mechanical' | 'Civil' | 'General';
   status: 'Available' | 'Issued' | 'Reserved';
+  format: BookFormat;
+  publisher?: string;
 }
 
 export interface Announcement {

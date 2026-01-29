@@ -38,38 +38,23 @@ export const LIBRARY_RESOURCES: LibraryResource[] = [
 ];
 
 export const SEMESTER_BOOKS: Book[] = [
-  // Semester 8
-  { id: 'b8-1', title: 'Professional Ethics in Engineering', author: 'Charles D. Fleddermann', subject: 'Ethics', isbn: '978-0132145213', semester: 8, branch: 'General', status: 'Available' },
+  // Semester 6 - CS (Student's current semester)
+  { id: 'b1', title: 'Compiler Design', author: 'Alfred V. Aho', subject: 'CS', isbn: '978-0321486813', semester: 6, branch: 'CS', status: 'Available', format: 'Both', publisher: 'Pearson' },
+  { id: 'b2', title: 'Cryptography and Network Security', author: 'William Stallings', subject: 'Cyber Security', isbn: '978-0134444284', semester: 6, branch: 'CS', status: 'Available', format: 'Physical', publisher: 'Pearson' },
+  { id: 'b4', title: 'Artificial Intelligence: A Modern Approach', author: 'Stuart Russell', subject: 'CS', isbn: '978-0136042594', semester: 6, branch: 'CS', status: 'Issued', format: 'Both', publisher: 'Prentice Hall' },
+  { id: 'b5', title: 'Cloud Computing Principles', author: 'Rajkumar Buyya', subject: 'Cloud', isbn: '978-0123848773', semester: 6, branch: 'CS', status: 'Available', format: 'E-Book', publisher: 'Morgan Kaufmann' },
+  { id: 'b6', title: 'Mobile Computing', author: 'Raj Kamal', subject: 'IT', isbn: '978-0198068914', semester: 6, branch: 'IT', status: 'Available', format: 'Physical', publisher: 'Oxford' },
+
+  // Reference Books
+  { id: 'ref-1', title: 'The Art of Computer Programming', author: 'Donald Knuth', subject: 'Algorithms', isbn: '978-0201896831', semester: 'Reference', branch: 'General', status: 'Available', format: 'Physical', publisher: 'Addison-Wesley' },
+  { id: 'ref-2', title: 'Clean Code', author: 'Robert C. Martin', subject: 'Software Eng', isbn: '978-0132350884', semester: 'Reference', branch: 'General', status: 'Available', format: 'Both', publisher: 'Prentice Hall' },
+  { id: 'ref-3', title: 'Design Patterns', author: 'Gamma et al.', subject: 'Software Eng', isbn: '978-0201633610', semester: 'Reference', branch: 'General', status: 'Available', format: 'Both', publisher: 'Addison-Wesley' },
+  { id: 'ref-4', title: 'Introduction to Algorithms', author: 'Cormen et al.', subject: 'Algorithms', isbn: '978-0262033848', semester: 'Reference', branch: 'CS', status: 'Available', format: 'Physical', publisher: 'MIT Press' },
   
-  // Semester 7
-  { id: 'b7-1', title: 'Principles of Cloud Computing', author: 'P. Venkata Krishna', subject: 'Cloud', isbn: '978-1259026331', semester: 7, branch: 'CS', status: 'Available' },
-  { id: 'b7-2', title: 'Adhoc and Sensor Networks', author: 'C. Siva Ram Murthy', subject: 'Networks', isbn: '978-0131322387', semester: 7, branch: 'CS', status: 'Reserved' },
-
-  // Semester 6 - CS
-  { id: 'b1', title: 'Compiler Design', author: 'Alfred V. Aho', subject: 'Computer Science', isbn: '978-0321486813', semester: 6, branch: 'CS', status: 'Available' },
-  { id: 'b2', title: 'Cryptography and Network Security', author: 'William Stallings', subject: 'Cyber Security', isbn: '978-0134444284', semester: 6, branch: 'CS', status: 'Available' },
-  { id: 'b3', title: 'Mobile Computing', author: 'Raj Kamal', subject: 'IT', isbn: '978-0198068914', semester: 6, branch: 'IT', status: 'Issued' },
-  { id: 'b4', title: 'Artificial Intelligence', author: 'Stuart Russell', subject: 'Computer Science', isbn: '978-0136042594', semester: 6, branch: 'CS', status: 'Available' },
-  { id: 'b5', title: 'Cloud Computing Principles', author: 'Rajkumar Buyya', subject: 'Cloud', isbn: '978-0123848773', semester: 6, branch: 'CS', status: 'Available' },
-  
-  // Semester 5
-  { id: 'b5-1', title: 'Theory of Computation', author: 'Michael Sipser', subject: 'Theory', isbn: '978-1133187783', semester: 5, branch: 'CS', status: 'Available' },
-  { id: 'b5-2', title: 'Microprocessors and Interfacing', author: 'Douglas V. Hall', subject: 'Hardware', isbn: '978-0070601673', semester: 5, branch: 'ECE', status: 'Available' },
-
-  // Semester 4
-  { id: 'b6', title: 'Database System Concepts', author: 'Silberschatz', subject: 'DBMS', isbn: '978-0073523323', semester: 4, branch: 'CS', status: 'Available' },
-  { id: 'b7', title: 'Discrete Mathematics', author: 'Kenneth Rosen', subject: 'Mathematics', isbn: '978-0073383095', semester: 4, branch: 'General', status: 'Issued' },
-  { id: 'b8', title: 'Design and Analysis of Algorithms', author: 'Sartaj Sahni', subject: 'Algorithms', isbn: '978-8173716126', semester: 4, branch: 'CS', status: 'Available' },
-  
-  // Semester 3
-  { id: 'b3-1', title: 'Digital Design', author: 'Morris Mano', subject: 'Electronics', isbn: '978-0132774208', semester: 3, branch: 'ECE', status: 'Available' },
-
-  // Semester 2 - General
-  { id: 'b9', title: 'Engineering Physics', author: 'Gaur & Gupta', subject: 'Physics', isbn: '978-8189928223', semester: 2, branch: 'General', status: 'Available' },
-  { id: 'b10', title: 'Calculus and Linear Algebra', author: 'B.S. Grewal', subject: 'Mathematics', isbn: '978-8193328491', semester: 2, branch: 'General', status: 'Available' },
-
-  // Semester 1
-  { id: 'b1-1', title: 'Engineering Graphics', author: 'N.D. Bhatt', subject: 'Graphics', isbn: '978-9380358178', semester: 1, branch: 'General', status: 'Available' }
+  // Journals
+  { id: 'j-1', title: 'IEEE Transactions on Computers', author: 'IEEE Computer Society', subject: 'Computing', isbn: 'ISSN 0018-9340', semester: 'Journal', branch: 'General', status: 'Available', format: 'E-Book', publisher: 'IEEE' },
+  { id: 'j-2', title: 'ACM Computing Surveys', author: 'ACM', subject: 'Review', isbn: 'ISSN 0360-0300', semester: 'Journal', branch: 'General', status: 'Available', format: 'Both', publisher: 'ACM' },
+  { id: 'j-3', title: 'Journal of Network and Computer Applications', author: 'Elsevier', subject: 'Networking', isbn: 'ISSN 1084-8045', semester: 'Journal', branch: 'IT', status: 'Issued', format: 'Physical', publisher: 'Elsevier' }
 ];
 
 export const DIGITAL_RESOURCES: DigitalResource[] = [
@@ -77,31 +62,15 @@ export const DIGITAL_RESOURCES: DigitalResource[] = [
   { id: 1, name: 'Directory of Open Access Journals', url: 'http://doaj.org', category: 'E-Journal' },
   { id: 2, name: 'BioMed Central', url: 'http://www.biomedcentral.com/journals', category: 'E-Journal' },
   { id: 3, name: 'Scientific Research Publishing', url: 'http://www.scirp.org', category: 'E-Journal' },
-  { id: 4, name: 'CORE', url: 'https://www.core.ac.uk/', category: 'E-Journal' },
-  { id: 5, name: 'Trans Stellar Journal Publication & Research Consultancy', url: 'http://www.tiprc.org/', category: 'E-Journal' },
-  { id: 6, name: 'Science Publications', url: 'http://thescipub.com', category: 'E-Journal' },
-  { id: 7, name: 'Research India Publication', url: 'http://www.ripublication.com', category: 'E-Journal' },
-  { id: 8, name: 'IAEME', url: 'http://www.iaeme.com', category: 'E-Journal' },
-  { id: 9, name: 'SSRG', url: 'http://www.internationaljournalssrg.org', category: 'E-Journal' },
   { id: 10, name: 'Google Scholar', url: 'https://www.scholar.google.com', category: 'E-Journal' },
-  { id: 11, name: 'arXiv', url: 'https://www.arxiv.org', category: 'E-Journal' },
-  { id: 12, name: 'Hindawi', url: 'http://www.hindawi.com', category: 'E-Journal' },
-  { id: 13, name: 'CSC Open-Access Library', url: 'http://www.cscjournals.org', category: 'E-Journal' },
-  { id: 14, name: 'OMICS International', url: 'http://www.omicsonline.org', category: 'E-Journal' },
-  { id: 15, name: 'Indian Academy of Sciences', url: 'http://www.ias.ac.in', category: 'E-Journal' },
   // E-Libraries
   { id: 16, name: 'DELNET', url: 'https://delnet.in/', category: 'E-Library' },
   { id: 17, name: 'J-Gate', url: 'https://jgateplus.com/', category: 'E-Library' },
   { id: 18, name: 'National Digital Library', url: 'https://ndl.iitkgp.ac.in/', category: 'E-Library' },
-  { id: 19, name: 'World Digital Library', url: 'https://www.wdl.org/', category: 'E-Library' },
-  { id: 20, name: 'Shodhganga', url: 'https://shodhganga.inflibnet.ac.in/', category: 'E-Library' },
-  { id: 21, name: 'ShodhSindhu', url: 'https://ess.inflibnet.ac.in/', category: 'E-Library' },
   // E-Books
   { id: 22, name: 'Project Gutenberg', url: 'https://www.gutenberg.org/', category: 'E-Book' },
   { id: 23, name: 'Open Library', url: 'https://openlibrary.org/', category: 'E-Book' },
-  { id: 24, name: 'Google Books', url: 'https://books.google.com/', category: 'E-Book' },
-  { id: 25, name: 'BookBoon', url: 'https://bookboon.com/', category: 'E-Book' },
-  { id: 26, name: 'Directory of Open Access Books (DOAB)', url: 'https://www.doabooks.org/', category: 'E-Book' }
+  { id: 24, name: 'Google Books', url: 'https://books.google.com/', category: 'E-Book' }
 ];
 
 export const ANNOUNCEMENTS: Announcement[] = [
